@@ -1,4 +1,4 @@
-100     !No. of points in each dimension
+1024     !No. of points in each dimension
 1.0e7    !Time of interaction
 1.0      !Timestep
 1.0e10   !Width of wavefunction in x
