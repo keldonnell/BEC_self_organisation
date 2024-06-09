@@ -61,11 +61,14 @@ def initvars():
     hx = L_dom / np.float32(nodes)
     tperplot = maxt / np.float32(plotnum - 1)
     x = np.linspace(0, L_dom - hx, nodes) - L_dom / 2.0
+
+    #Initial guassian w.f.
     y0 = np.complex64(np.exp(-(x**2) / (2.0 * width_psi**2)))
     y0 = y0 * np.exp(1j * v0 * x)
     y0 = y0 * (np.ones(nodes) + 1.0e-6 * np.cos(x))
     norm = hx * np.sum(np.abs(y0) ** 2)
     y0 = y0 / np.sqrt(norm) * np.sqrt(L_dom)
+
     noise = np.random.random_sample(nodes) * 0.0               #When is it useful to remove the *0.0?
     kx = np.fft.fftfreq(nodes, d=hx) * 2.0 * np.pi
 
@@ -78,7 +81,7 @@ def output(t, y):
     F = (
         np.sqrt(p0)
         * np.exp(-1j * b0 / (2.0 * Delta) * np.abs(psi) ** 2)
-        * (np.ones(nodes) + noise)                              #Why do we need to add 'noise'?
+        * (np.ones(nodes) + noise)                              #Why do we need to add 'noise' and what does it change?
     )
     B = calc_B(F, shift)
     s = p0 + np.abs(B) ** 2
@@ -109,7 +112,7 @@ def output(t, y):
 
 
 # Integrate kinetic energy part of Schrodinger equation
-def propagate_bec(y, tstep):
+def propagate_bec(y, tstep):                                       #How does multiplying by this complex exponential in k-space correspond to numerically integrating the kinetic term in S.E
     psi = y
     psi_k = np.fft.fft(psi)
     psi_k = psi_k * np.exp(-1j * omega_r * kx**2 * tstep)
@@ -127,16 +130,16 @@ def calc_B(F, shift):
     return B
 
 
-# 2nd order Runge-Kutta algorithm
 def rk2(t, y):
-    yk1 = ht * dy(t, y)
-    tt = t + 0.5 * ht
-    yt = y + 0.5 * yk1
-    yk2 = ht * dy(tt, yt)
-    newt = t + ht
-    newy = y + yk2
+    yk1 = ht * dy(t, y)  # First estimate of the slope
+    tt = t + 0.5 * ht    # Midpoint in time
+    yt = y + 0.5 * yk1   # Estimate y at the midpoint
+    yk2 = ht * dy(tt, yt) # Slope at the midpoint
+    newt = t + ht        # New time
+    newy = y + yk2       # New y using the slope at the midpoint
 
     return newt, newy
+
 
 
 # RHS of ODEs for integration of potential energy part of Schrodinger equation
@@ -148,7 +151,7 @@ def dy(t, y):
         * (np.ones(nodes) + noise)
     )
     B = calc_B(F, shift)
-    return -1j * Delta / 4.0 * (p0 + np.abs(B) ** 2) * psi
+    return -1j * Delta / 4.0 * (p0 + np.abs(B) ** 2) * psi      #Where does this come from? The |F|^2 has been removed and a i is added
 
 
 
