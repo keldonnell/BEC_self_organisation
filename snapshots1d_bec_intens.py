@@ -6,30 +6,48 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import os
+import argparse
 
 # fname = raw_input("Enter filename: ")
 plt.rcParams["ps.usedistiller"] = (
     "xpdf"  # improves quality of .eps figures for use with LaTeX
 )
 
-fname1 = "s.out"
-fname2 = "psi.out"
+parser = argparse.ArgumentParser(description="")
 
-print("Loading " + fname1)
-data1 = np.loadtxt(fname1)  # load dataset in the form t, intensity
-print("Loading " + fname2)
-data2 = np.loadtxt(fname2)  # load dataset in the form t, |Psi|^2
+parser.add_argument(
+    "-f",
+    "--filename",
+    metavar="filename",
+    required=True,
+    help="The name of the file to save to",
+)
+
+args = parser.parse_args()
 
 
-framedir = "frames/"  # Folder where .png images are to be located
-if not os.path.exists(framedir):  # Create folder if it does not aleady exist
-    os.makedirs(framedir)
+output_dir = "patt1d_outputs/" + args.filename + "/"
+input_dir = "patt1d_inputs/" + args.filename + "/"
+frames_dir = output_dir + "frames/"
+s_dir = output_dir + "s.out"
+psi_dir = output_dir + "psi.out"
+seed_dir = input_dir + "seed.in"
+
+print("Loading " + s_dir)
+data1 = np.loadtxt(s_dir)  # load dataset in the form t, intensity
+print("Loading " + psi_dir)
+data2 = np.loadtxt(psi_dir)  # load dataset in the form t, |Psi|^2
+
+
+if os.path.exists(frames_dir):
+    raise Exception("The filename already exists")
+else:  # Create folder if it does not aleady exist
+    os.makedirs(frames_dir)
 
 
 # Read input data from file
 def readinput():
-    fname0 = "patt1d_q_sfm.in"
-    data0 = np.genfromtxt(fname0, skip_footer=1, comments="!")  # load input data file
+    data0 = np.genfromtxt(seed_dir, skip_footer=1, comments="!")  # load input data file
 
     nodes = data0[0].astype(int)
     maxt = data0[1]
@@ -77,7 +95,7 @@ prob = data2[:, 1:]
 # plt.ion()
 plt.ioff()
 
-pi = 4.0 * np.arctan(1.0)
+pi = np.pi
 xco = np.linspace(-pi * num_crit, pi * num_crit, nodes)
 
 fig = plt.figure()
@@ -104,7 +122,7 @@ for j in np.arange(0, plotnum - 1, step):
     plt.draw()
     #    plt.show()
     #    time.sleep(0.02)
-    filename = framedir + str("%03d" % count) + ".png"
+    filename = frames_dir + str("%03d" % count) + ".png"
     fig.savefig(filename, dpi=200)
     plt.clf()
 

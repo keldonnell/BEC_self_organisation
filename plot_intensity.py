@@ -8,23 +8,39 @@ import time
 import subprocess  # For issuing commands to the OS.
 import os
 import sys  # For determining the Python version.
+import argparse
 
 # fname = raw_input("Enter filename: ")
 plt.rcParams["ps.usedistiller"] = (
     "xpdf"  # improves quality of .eps figures for use with LaTeX
 )
 
-fname1 = "psi.out"
-fname2 = "s.out"
+parser = argparse.ArgumentParser(description="")
 
-data1 = np.loadtxt(fname1)  # load dataset in the form t, intensity
-data2 = np.loadtxt(fname2)  # load dataset in the form t, intensity
+parser.add_argument(
+    "-f",
+    "--filename",
+    metavar="filename",
+    required=True,
+    help="The name of the file to save to",
+)
+
+args = parser.parse_args()
+
+
+output_dir = "patt1d_outputs/" + args.filename + "/"
+input_dir = "patt1d_inputs/" + args.filename + "/"
+s_dir = output_dir + "s.out"
+psi_dir = output_dir + "psi.out"
+seed_dir = input_dir + "seed.in"
+
+data1 = np.loadtxt(psi_dir)  # load dataset in the form t, intensity
+data2 = np.loadtxt(s_dir)  # load dataset in the form t, intensity
 
 
 # Read input data from file
 def readinput():
-    fname0 = "patt1d_q_sfm.in"
-    data0 = np.genfromtxt(fname0, skip_footer=1, comments="!")  # load input data file
+    data0 = np.genfromtxt(seed_dir, skip_footer=1, comments="!")  # load input data file
 
     nodes = data0[0].astype(int)
     maxt = data0[1]
@@ -71,11 +87,8 @@ psi = data1[:, 1:]
 s = data2[:, 1:]
 
 
-pi = 4.0 * np.arctan(1.0)
-print(pi)
+pi = np.pi
 xco = np.linspace(-pi * num_crit, pi * num_crit, nodes)
-
-# xmat,tmat=np.meshgrid(xco,tvec)
 
 
 fig = plt.figure()
@@ -83,12 +96,12 @@ fig = plt.figure()
 ax1 = plt.subplot(121, aspect="auto")
 f1 = ax1.imshow(
     psi,
-    extent = [-pi * num_crit, pi * num_crit, 0, tvec.max()],
-    origin = "lower",
-    vmin = psi.min(),
-    vmax = psi.max(),
-    aspect = "auto",
-    cmap = "hot",
+    extent=[-pi * num_crit, pi * num_crit, 0, tvec.max()],
+    origin="lower",
+    vmin=psi.min(),
+    vmax=psi.max(),
+    aspect="auto",
+    cmap="hot",
 )
 cb1 = fig.colorbar(f1, orientation="horizontal")
 ax1.set_xlabel(r"$q_c x$", fontsize=14)
@@ -99,12 +112,12 @@ ax1.set_title(r"BEC density $|\Psi|^2$", fontsize=14)
 ax2 = plt.subplot(122, aspect="auto")
 f2 = ax2.imshow(
     s,
-    extent = [-pi * num_crit, pi * num_crit, 0, tvec.max()],
-    origin = "lower",
-    vmin = s.min(),
-    vmax = s.max(),
-    aspect = "auto",
-    cmap = "hot",
+    extent=[-pi * num_crit, pi * num_crit, 0, tvec.max()],
+    origin="lower",
+    vmin=s.min(),
+    vmax=s.max(),
+    aspect="auto",
+    cmap="hot",
 )
 cb1 = fig.colorbar(f2, orientation="horizontal")
 ax2.set_xlabel(r"$q_c x$", fontsize=14)

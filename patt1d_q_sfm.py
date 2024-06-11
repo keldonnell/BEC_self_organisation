@@ -5,22 +5,49 @@ Created on Thu Oct 8 09:45:14 2020
 @author: Gordon Robb
 """
 import numpy as np
+import os
+import argparse
+
+parser = argparse.ArgumentParser(description="")
+
+parser.add_argument(
+    "-f",
+    "--filename",
+    metavar="filename",
+    required=True,
+    help="The name of the file to save to",
+)
+
+args = parser.parse_args()
+
+output_dir = "patt1d_outputs/" + args.filename + "/"
+input_dir = "patt1d_inputs/" + args.filename + "/"
+s_dir = output_dir + "s.out"
+psi_dir = output_dir + "psi.out"
+seed_dir = input_dir + "seed.in"
+
+if os.path.exists(output_dir):
+    raise Exception("That filename already exists")
+else:
+    if os.path.exists(input_dir):
+        os.mkdir(output_dir)
+    else:
+        raise Exception("There is no input seed file associated with that filename")
 
 
 # Open new output data files
 def openfiles():
 
-    f_s = open("s.out", "w")
+    f_s = open(s_dir, "w")
     f_s.close()
 
-    f_psi = open("psi.out", "w")
+    f_psi = open(psi_dir, "w")
     f_psi.close()
 
 
 # Read input data from file
 def readinput():
-    fname0 = "patt1d_q_sfm.in"
-    data0 = np.genfromtxt(fname0, skip_footer=1, comments="!")  # load input data file
+    data0 = np.genfromtxt(seed_dir, skip_footer=1, comments="!")  # load input data file
 
     nodes = data0[0].astype(int)
     maxt = data0[1]
@@ -35,6 +62,7 @@ def readinput():
     gbar = data0[10]
     v0 = data0[11]
     plotnum = data0[12].astype(int)
+    noise_val = data0[13]
 
     return (
         nodes,
@@ -50,6 +78,7 @@ def readinput():
         gbar,
         v0,
         plotnum,
+        noise_val,
     )
 
 
@@ -66,7 +95,9 @@ def initvars():
     y0 = y0 * (np.ones(nodes) + 1.0e-6 * np.cos(x))
     norm = hx * np.sum(np.abs(y0) ** 2)
     y0 = y0 / np.sqrt(norm) * np.sqrt(L_dom)
-    noise = np.random.random_sample(nodes) * 0.0               #When is it useful to remove the *0.0?
+    noise = (
+        np.random.random_sample(nodes) * noise_val
+    )  # When is it useful to remove the *0.0?
     kx = np.fft.fftfreq(nodes, d=hx) * 2.0 * np.pi
 
     return shift, L_dom, hx, tperplot, x, y0, noise, kx
@@ -78,19 +109,19 @@ def output(t, y):
     F = (
         np.sqrt(p0)
         * np.exp(-1j * b0 / (2.0 * Delta) * np.abs(psi) ** 2)
-        * (np.ones(nodes) + noise)                              #Why do we need to add 'noise'?
+        * (np.ones(nodes) + noise)  # Why do we need to add 'noise'?
     )
     B = calc_B(F, shift)
     s = p0 + np.abs(B) ** 2
     error = hx * np.sum((np.abs(psi)) ** 2) - L_dom
     mod = np.max(s) - np.min(s)
 
-    f_s = open("s.out", "a+")
+    f_s = open(s_dir, "a+")
     data = np.concatenate(([t], s))
     np.savetxt(f_s, data.reshape((1, nodes + 1)), fmt="%1.3E", delimiter=" ")
     f_s.close()
 
-    f_psi = open("psi.out", "a+")
+    f_psi = open(psi_dir, "a+")
     data = np.concatenate(([t], np.abs(psi) ** 2))
     np.savetxt(f_psi, data.reshape((1, nodes + 1)), fmt="%1.3E", delimiter=" ")
     f_psi.close()
@@ -151,13 +182,25 @@ def dy(t, y):
     return -1j * Delta / 4.0 * (p0 + np.abs(B) ** 2) * psi
 
 
-
 ##########
 
 openfiles()
-nodes, maxt, ht, width_psi, p0, Delta, omega_r, b0, num_crit, R, gbar, v0, plotnum = (
-    readinput()
-)
+(
+    nodes,
+    maxt,
+    ht,
+    width_psi,
+    p0,
+    Delta,
+    omega_r,
+    b0,
+    num_crit,
+    R,
+    gbar,
+    v0,
+    plotnum,
+    noise_val,
+) = readinput()
 shift, L_dom, hx, tperplot, x, y0, noise, kx = initvars()
 
 y = y0
@@ -178,4 +221,3 @@ while t < maxt:
 print("Finished.")
 
 # q: what does this code do?
-
