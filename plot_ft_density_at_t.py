@@ -96,11 +96,29 @@ fft_psi_vals = np.fft.fft(psi_vals_at_t)
 k_vals = np.fft.fftfreq(len(x_vals), np.diff(x_vals)[0])
 
 
+# This code can definitely be made more clean/simple
+# Finds the start and end index of the 1st fourier mode
+'''
+mode_1st_index = []
+for i in range(len(fft_psi_vals) // 2, len(fft_psi_vals)):
+    counter = 0 
+    print(fft_psi_vals[i-1])
+    if (fft_psi_vals[i-1] == 0 and fft_psi_vals[i] != 0):
+        if counter == 1 or counter == 2:
+            mode_1st_index.append[i-1]
+        counter += 1
+
+print(len(mode_1st_index))
+integral_1st_modes = 2 * np.trapz(fft_psi_vals[mode_1st_index[0]:mode_1st_index[1]], k_vals[mode_1st_index[0]:mode_1st_index[1]])
+
+print("Integral 1st modes: " + integral_1st_modes)
+'''
+
 # Plotting the graph
 fig, ax = plt.subplots(figsize=(6, 6))
-ax.set_title(r"Fourier transform of $|\psi|^2$ at t = " + str(t))
+ax.set_title(r"Fourier transform of $|\psi|^2$ at \Gamma t = " + str(t))
 ax.set_xlabel(r"$\Gamma k$", fontsize=14)
 ax.set_ylabel(r"$\mathcal{F}[|\psi|^2]$", fontsize=14)
-ax.plot(k_vals, fft_psi_vals)
+ax.scatter(k_vals, np.abs(fft_psi_vals))
 # ax.plot(k_vals[:nodes//2], np.abs(fft_psi_vals[:nodes//2]))
 plt.show()
