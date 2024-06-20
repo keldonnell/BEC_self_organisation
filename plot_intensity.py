@@ -9,11 +9,14 @@ import subprocess  # For issuing commands to the OS.
 import os
 import sys  # For determining the Python version.
 import argparse
+import glob
 
 # fname = raw_input("Enter filename: ")
 plt.rcParams["ps.usedistiller"] = (
     "xpdf"  # improves quality of .eps figures for use with LaTeX
 )
+
+
 
 parser = argparse.ArgumentParser(description="")
 
@@ -25,6 +28,14 @@ parser.add_argument(
     help="The name of the file to save to",
 )
 
+parser.add_argument(
+    "-i",
+    "--frame_index",
+    metavar="frame_index",
+    required=False,
+    help="The index of the frame to plot",
+)
+
 args = parser.parse_args()
 
 
@@ -34,8 +45,18 @@ s_dir = output_dir + "s.out"
 psi_dir = output_dir + "psi.out"
 seed_dir = input_dir + "seed.in"
 
-data1 = np.loadtxt(psi_dir)  # load dataset in the form t, intensity
-data2 = np.loadtxt(s_dir)  # load dataset in the form t, intensity
+
+if ((len(glob.glob(output_dir + "psi*")) > 1 or len(glob.glob(output_dir + "psi*")) > 1) and args.frame_index == None):
+    raise Exception("You must specify a frame index as there is more than one file")
+
+if (len(glob.glob(output_dir + "psi*")) == 1):
+    data1 = np.loadtxt(glob.glob(output_dir + f"psi*")[0])
+    data2 = np.loadtxt(glob.glob(output_dir + f"s*")[0])
+else:
+    data1 = np.loadtxt(glob.glob(output_dir + f"psi{args.frame_index}_*")[0])
+    data2 = np.loadtxt(glob.glob(output_dir + f"s{args.frame_index}_*")[0])
+    print(glob.glob(output_dir + f"psi{args.frame_index}_*")[0])
+    print(glob.glob(output_dir + f"s{args.frame_index}_*")[0])
 
 
 # Read input data from file
@@ -82,7 +103,6 @@ nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnu
 )
 
 tvec = data1[:, 0]
-# plotnum=len(tvec)
 psi = data1[:, 1:]
 s = data2[:, 1:]
 

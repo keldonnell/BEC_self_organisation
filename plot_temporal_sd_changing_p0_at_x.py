@@ -1,4 +1,4 @@
-# Plots the spatial standard deviation for different pump parameters at a specific time/peak of the density (|psi|^2) data
+# Plots the temporal standard deviation for different pump parameters at a specific x coord of the density (|psi|^2) data
 
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
@@ -24,11 +24,11 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-t",
-    "--time",
-    metavar="time",
+    "-x",
+    "--xpos",
+    metavar="x_position",
     required=True,
-    help="The time co-ord to inpect the fourier transform at",
+    help="The x co-ord to inspect the fourier transform at",
 )
 
 
@@ -81,31 +81,36 @@ nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnu
     readinput()
 )
 
-t = float(args.time)
-t_index = int((t / maxt) * plotnum)
+x = float(args.xpos)
+x_index = int(
+    (np.abs(x + np.pi * num_crit) / (2 * np.pi * num_crit)) * nodes
+)
 
 data1_files = glob.glob(output_dir + "psi*")
+
 sd_vals = [
     np.sqrt(
         np.mean(
             (
-                np.loadtxt(data1_files[i])[t_index, 1:]
-                - np.mean(np.loadtxt(data1_files[i])[t_index, 1:])
+                np.loadtxt(data1_files[i])[:, x_index]
+                - np.mean(np.loadtxt(data1_files[i])[:, x_index])
             )
             ** 2
         )
     )
     for i in range(len(data1_files))
 ]
+
 rms_vals = [
-    np.sqrt(np.mean((np.loadtxt(data1_files[i])[t_index, 1:]) ** 2))
+    np.sqrt(np.mean((np.loadtxt(data1_files[i])[:, x_index]) ** 2))
     for i in range(len(data1_files))
 ]
+
 span_vals = [
     np.abs(
         (
-            np.max(np.loadtxt(data1_files[i])[t_index, 1:])
-            - np.min(np.loadtxt(data1_files[i])[t_index, 1:])
+            np.max(np.loadtxt(data1_files[i])[:, x_index])
+            - np.min(np.loadtxt(data1_files[i])[:, x_index])
         )
     )
     for i in range(len(data1_files))
@@ -121,17 +126,17 @@ print(p0_vals)
 
 # Plotting the graph
 fig, ax = plt.subplots(1, 3, figsize=(18, 6))
-ax[0].set_title(r"Standard deviation of $|\psi|^2$ at different pump parameters")
+ax[0].set_title(r"Temporal standard deviation of $|\psi|^2$ at x = " + str(x))
 ax[0].set_xlabel(r"$p_0$", fontsize=14)
 ax[0].set_ylabel(r"$\sigma[|\psi|^2]$", fontsize=14)
 ax[0].scatter(p0_vals, sd_vals)
 
-ax[1].set_title(r"RMS of $|\psi|^2$ at different pump parameters")
+ax[1].set_title(r"RMS of $|\psi|^2$ at x = " + str(x))
 ax[1].set_xlabel(r"$p_0$", fontsize=14)
 ax[1].set_ylabel(r"RMS $[|\psi|^2]$", fontsize=14)
 ax[1].scatter(p0_vals, rms_vals)
 
-ax[2].set_title(r"Span of $|\psi|^2$ at different pump parameters")
+ax[2].set_title(r"Span of $|\psi|^2$ at x = " + str(x))
 ax[2].set_xlabel(r"$p_0$", fontsize=14)
 ax[2].set_ylabel(r"Span $[|\psi|^2]$", fontsize=14)
 ax[2].scatter(p0_vals, span_vals)
