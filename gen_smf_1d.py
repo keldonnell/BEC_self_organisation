@@ -144,7 +144,7 @@ def output(t, y, p0, counter):
     F = (
         np.sqrt(p0)
         * np.exp(-1j * b0 / (2.0 * Delta) * np.abs(psi) ** 2)
-        * (np.ones(nodes) + noise)  # Why do we need to add 'noise'?
+        * (np.ones(nodes) + noise)  
     )
     B = calc_B(F, shift)
     s = p0 + np.abs(B) ** 2

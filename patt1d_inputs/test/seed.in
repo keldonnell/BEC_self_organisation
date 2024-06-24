@@ -1,6 +1,5 @@
-1024     !No. of points in x 
-1024     !No. of points in y 
-1.0e7    !Time of interaction
+512     !No. of points in each dimension
+1.60e7    !Time of interaction
 1.0      !Timestep
 1.0e10   !Width of wavefunction in x
 3.04e-7  !p0 (Pump saturation parameter)
@@ -11,6 +10,6 @@
 1.0      !Mirror reflectivity
 0.0      !Scattering length parameter (gbar)
 0.0      !Initial BEC velocity (v0)
-101      !No. of outputs
+404      !No. of outputs
 0.0      !Noise (0.0 - off, 1.0 - max)
 .T.      !FFT output flag  

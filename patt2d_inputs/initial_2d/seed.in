@@ -1,8 +1,9 @@
-1024     !No. of points in x 
-1024     !No. of points in y 
+128     !No. of points in x 
+128     !No. of points in y 
 1.0e7    !Time of interaction
 1.0      !Timestep
-1.0e10   !Width of wavefunction in x
+1e10     !Width of wavefunction in x
+1e10     !Width of wavefunction in y 
 3.04e-7  !p0 (Pump saturation parameter)
 3500.0   !Delta (Delta)
 1.14e-5  !omega_r/Gamma (omega_r)
@@ -10,7 +11,8 @@
 8.0      !Number of critical wavelengths in domain (num_crit) "Not sure what this means"
 1.0      !Mirror reflectivity
 0.0      !Scattering length parameter (gbar)
-0.0      !Initial BEC velocity (v0)
+0.0      !Initial BEC x-velocity (v0_x)
+0.0      !Initial BEC y-velocity (v0_y)
 101      !No. of outputs
 0.0      !Noise (0.0 - off, 1.0 - max)
 .T.      !FFT output flag  

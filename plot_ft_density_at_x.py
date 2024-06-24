@@ -100,7 +100,7 @@ omega_vals = np.fft.fftfreq(len(t_vals), np.diff(t_vals)[0])
 # Plotting the graph
 fig, ax = plt.subplots(figsize=(6, 6))
 ax.set_title(r"Fourier transform of $|\psi|^2$ at x = " + str(x))
-ax.set_xlabel(r"$\Gamma \omega$", fontsize=14)
+ax.set_xlabel(r"$\Gamma \nu$", fontsize=14)
 ax.set_ylabel(r"$\mathcal{F}[|\psi(t)|^2]$", fontsize=14)
 ax.plot(omega_vals, np.abs(fft_psi_vals))
 # ax.plot(k_vals[:nodes//2], np.abs(fft_psi_vals[:nodes//2]))

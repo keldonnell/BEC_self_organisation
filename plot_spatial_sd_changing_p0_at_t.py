@@ -134,17 +134,17 @@ print(p0_vals)
 
 # Plotting the graph
 fig, ax = plt.subplots(1, 3, figsize=(18, 6))
-ax[0].set_title(r"Standard deviation of $|\psi|^2$ at different pump parameters")
+ax[0].set_title(r"Spatial standard deviation of $|\psi|^2$ at t = " + str(t))
 ax[0].set_xlabel(r"$p_0$", fontsize=14)
 ax[0].set_ylabel(r"$\sigma[|\psi|^2]$", fontsize=14)
 ax[0].scatter(p0_vals, sd_vals)
 
-ax[1].set_title(r"RMS of $|\psi|^2$ at different pump parameters")
+ax[1].set_title(r"RMS of $|\psi|^2$ at t = " + str(t))
 ax[1].set_xlabel(r"$p_0$", fontsize=14)
 ax[1].set_ylabel(r"RMS $[|\psi|^2]$", fontsize=14)
 ax[1].scatter(p0_vals, rms_vals)
 
-ax[2].set_title(r"Span of $|\psi|^2$ at different pump parameters")
+ax[2].set_title(r"Span of $|\psi|^2$ at t = " + str(t))
 ax[2].set_xlabel(r"$p_0$", fontsize=14)
 ax[2].set_ylabel(r"Span $[|\psi|^2]$", fontsize=14)
 ax[2].scatter(p0_vals, span_vals)
