@@ -1,5 +1,4 @@
 1024     !No. of points in x 
-1024     !No. of points in y 
 1.0e7    !Time of interaction
 1.0      !Timestep
 1.0e10   !Width of wavefunction in x
