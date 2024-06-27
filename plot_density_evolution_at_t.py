@@ -83,7 +83,6 @@ nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnu
 #mid_x_index = int(np.round(len(data1[0, 1:]) / 2))
 t = float(args.time)
 t_index = int((t / maxt) * plotnum)
-
 x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
 psi_vals_at_t = data1[t_index, 1:]  # All the psi values along x=0
 

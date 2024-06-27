@@ -90,9 +90,8 @@ psi_vals_at_0 = data1[:, mid_x_index]        #All the psi values along x=0
 t = float(args.time)
 t_index = int((t / maxt) * plotnum)
 x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
-#x_vals = np.linspace(-4, 4, nodes)
 psi_vals_at_t = data1[t_index, 1:]
-print(np.mean(psi_vals_at_t))
+
 
 fft_psi_vals = np.fft.fft(psi_vals_at_t)
 k_vals = np.fft.fftfreq(len(x_vals), np.diff(x_vals)[0])
@@ -121,6 +120,6 @@ fig, ax = plt.subplots(figsize=(6, 6))
 ax.set_title(r"Fourier transform of $|\psi|^2$ at \Gamma t = " + str(t))
 ax.set_xlabel(r"$\Gamma k$", fontsize=14)
 ax.set_ylabel(r"$\mathcal{F}[|\psi|^2]$", fontsize=14)
-ax.scatter(k_vals, np.abs(fft_psi_vals), s = 5)
+ax.scatter(k_vals, np.abs(fft_psi_vals))
 # ax.plot(k_vals[:nodes//2], np.abs(fft_psi_vals[:nodes//2]))
 plt.show()
