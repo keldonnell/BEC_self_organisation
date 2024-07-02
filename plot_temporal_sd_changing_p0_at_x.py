@@ -153,83 +153,87 @@ span_vals = [
     for i in range(len(data1_files))
 ]
 
-p0_vals = np.array(
+p_th = (2 * gambar) / (b0 * R)
+
+#(p0 - pth) / pth
+p0_shift_vals = (np.array(
     [
         float(re.findall(r"(\d+\.\d+e[-+]\d+)", data1_files[j])[0])
         for j in range(len(data1_files))
     ]
-)
+) / p_th) - 0.98
 
 # Plotting the graph
 fig, ax = plt.subplots(2, 3, figsize=(22, 14))
+fig.subplots_adjust(wspace=0.55, hspace=0.3)
 ax[0, 0].set_title(r"Temporal standard deviation of $|\psi|^2$ at x = " + str(x))
-ax[0, 0].set_xlabel(r"$p_0$", fontsize=14)
+ax[0, 0].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 0].set_ylabel(r"$\sigma[|\psi|^2]$", fontsize=14)
-ax[0, 0].scatter(p0_vals, sd_vals)
+ax[0, 0].scatter(p0_shift_vals, sd_vals)
 
 ax[0, 1].set_title(r"Modulation depth of $|\psi|^2$ at x = " + str(x))
-ax[0, 1].set_xlabel(r"$p_0$", fontsize=14)
+ax[0, 1].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 1].set_ylabel(r"Modulation depth m$[|\psi|^2]$", fontsize=14)
-ax[0, 1].scatter(p0_vals, mod_depth_vals)
+ax[0, 1].scatter(p0_shift_vals, mod_depth_vals)
 
 ax[0, 2].set_title(r"Span of $|\psi|^2$ at x = " + str(x))
-ax[0, 2].set_xlabel(r"$p_0$", fontsize=14)
+ax[0, 2].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 2].set_ylabel(r"Span $[|\psi|^2]$", fontsize=14)
-ax[0, 2].scatter(p0_vals, span_vals)
+ax[0, 2].scatter(p0_shift_vals, span_vals)
 
 
 
-exponent, base, r_srd = find_log_exponent(p0_vals, sd_vals)
+exponent, base, r_srd = find_log_exponent(p0_shift_vals, sd_vals)
 print(f"Standard Deviation: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
 
-ax[1, 0].scatter(p0_vals, sd_vals, label='Data')
+ax[1, 0].scatter(p0_shift_vals, sd_vals, label='Data')
 
-x_smooth = np.linspace(p0_vals.min(), p0_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
 slope = exponent
 intercept = np.log(base)
 y_smooth = slope * np.log(x_smooth) + intercept
 
 ax[1, 0].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
 ax[1, 0].set_xscale('log')
-ax[1, 0].set_xlabel(r'$p_0$')
+ax[1, 0].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 0].set_ylabel(r'$\sigma[|\psi^2|]$')
 ax[1, 0].set_title(f'Logarithmic Regression of s.d. (y = {slope:.2f} * log(x) + {intercept:.2f})')
 ax[1, 0].legend()
 ax[1, 0].grid(True)
 
 
-exponent, base, r_srd = find_log_exponent(p0_vals, mod_depth_vals)
+exponent, base, r_srd = find_log_exponent(p0_shift_vals, mod_depth_vals)
 print(f"Standard Deviation: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
 
-ax[1, 1].scatter(p0_vals, mod_depth_vals, label='Data')
+ax[1, 1].scatter(p0_shift_vals, mod_depth_vals, label='Data')
 
-x_smooth = np.linspace(p0_vals.min(), p0_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
 slope = exponent
 intercept = np.log(base)
 y_smooth = slope * np.log(x_smooth) + intercept
 
 ax[1, 1].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
 ax[1, 1].set_xscale('log')
-ax[1, 1].set_xlabel(r'$p_0$')
+ax[1, 1].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 1].set_ylabel(r'Modulation Depth $m[|\psi^2|]$')
 ax[1, 1].set_title(f'Logarithmic Regression of modulation depth (y = {slope:.2f} * log(x) + {intercept:.2f})')
 ax[1, 1].legend()
 ax[1, 1].grid(True)
 
 
-exponent, base, r_srd = find_log_exponent(p0_vals, span_vals)
+exponent, base, r_srd = find_log_exponent(p0_shift_vals, span_vals)
 print(f"Standard Deviation: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
 
-ax[1, 2].scatter(p0_vals, span_vals, label='Data')
+ax[1, 2].scatter(p0_shift_vals, span_vals, label='Data')
 
-x_smooth = np.linspace(p0_vals.min(), p0_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
 slope = exponent
 intercept = np.log(base)
 y_smooth = slope * np.log(x_smooth) + intercept
 
 ax[1, 2].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
 ax[1, 2].set_xscale('log')
-ax[1, 2].set_xlabel(r'$p_0$')
+ax[1, 2].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 2].set_ylabel(r'Span$[|\psi^2|]$')
 ax[1, 2].set_title(f'Logarithmic Regression of span (y = {slope:.2f} * log(x) + {intercept:.2f})')
 ax[1, 2].legend()

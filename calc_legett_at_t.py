@@ -1,10 +1,10 @@
-# Calculates the fourier transform of the BEC density at a x-pos, through time
 
 # -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
-from scipy.signal import find_peaks
+from scipy import integrate
+import argparse
 import glob
 
 
@@ -24,11 +24,11 @@ parser.add_argument(
 )
 
 parser.add_argument(
-    "-x",
-    "--xpos",
-    metavar="x_position",
+    "-t",
+    "--time",
+    metavar="time",
     required=True,
-    help="The x co-ord to inpect the fourier transform at",
+    help="The time to inpect the amplitude evolution at",
 )
 
 parser.add_argument(
@@ -40,7 +40,6 @@ parser.add_argument(
 )
 
 args = parser.parse_args()
-
 
 output_dir = "patt1d_outputs/" + args.filename + "/"
 input_dir = "patt1d_inputs/" + args.filename + "/"
@@ -60,6 +59,8 @@ else:
     data2 = np.loadtxt(glob.glob(output_dir + f"s{args.frame_index}_*")[0])
     print(glob.glob(output_dir + f"psi{args.frame_index}_*")[0])
     print(glob.glob(output_dir + f"s{args.frame_index}_*")[0])
+
+
 
 
 # Read input data from file
@@ -101,25 +102,21 @@ nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnu
     readinput()
 )
 
-x = float(args.xpos)
-x_index = int(
-    (np.abs(x + np.pi * num_crit) / (2 * np.pi * num_crit)) * nodes
-)
-t_vals = np.linspace(0, maxt, plotnum)
-psi_vals_at_x = data1[:, x_index]
+data1 = np.loadtxt(psi_dir)  # load dataset in the form t, amplitude
 
-fft_psi_vals = np.fft.fft(psi_vals_at_x)
-freq_vals = np.fft.fftfreq(len(t_vals), np.diff(t_vals)[0])
+t = float(args.time)
+t_index = int((t / maxt) * plotnum)
 
- # Find peaks
-peaks, _ = find_peaks(fft_psi_vals)
-print(freq_vals[peaks])
+x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
+psi_vals_at_t = data1[t_index, 1:]  # All the psi values along t_index
 
-# Plotting the graph
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.set_title(r"Fourier transform of $|\psi|^2$ at x = " + str(x))
-ax.set_xlabel(r"$\Gamma \nu$", fontsize=14)
-ax.set_ylabel(r"$\mathcal{F}[|\psi(t)|^2]$", fontsize=14)
-ax.scatter(freq_vals, np.abs(fft_psi_vals))
-# ax.plot(k_vals[:nodes//2], np.abs(fft_psi_vals[:nodes//2]))
-plt.show()
+recip_psi_vals_at_t = 1 / psi_vals_at_t
+L = 2 * np.pi * num_crit
+N = integrate.simps(psi_vals_at_t, x_vals)
+Q_0 = 1 / (integrate.simps(recip_psi_vals_at_t, x_vals) * (N / L**2))
+
+print(f"The legget criteria Q0 = {Q_0}")
+print(f"The number of atoms N = {N}")
+
+
+

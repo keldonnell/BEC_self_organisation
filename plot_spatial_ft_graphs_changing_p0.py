@@ -27,15 +27,6 @@ parser.add_argument(
     help="The name of the file to save to",
 )
 
-parser.add_argument(
-    "-x",
-    "--xpos",
-    metavar="x_position",
-    required=True,
-    help="The x co-ord to inspect the fourier transform at",
-)
-
-
 args = parser.parse_args()
 
 
@@ -90,18 +81,13 @@ def extract_index(filename):
     return int(match.group(1)) if match else 0
 
 
-x = float(args.xpos)
-x_index = int(
-    (np.abs(x + np.pi * num_crit) / (2 * np.pi * num_crit)) * nodes
-)
-
 data1_files = glob.glob(output_dir + "psi*")
 sorted_files = sorted(data1_files, key=extract_index)
 
-t_vals = np.linspace(0, maxt, plotnum)
-freq_vals = np.fft.fftfreq(len(t_vals), np.diff(t_vals)[0])
+x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
+k_vals = np.fft.fftfreq(len(x_vals), np.diff(x_vals)[0])
 
-analysed_fourier_data = fourier_utils.analyse_fourier_data(sorted_files, freq_vals, (2 * np.pi * num_crit), True, x_index)
+analysed_fourier_data = fourier_utils.analyse_fourier_data(sorted_files, k_vals, maxt, False)
 
 
 p_th = (2 * gambar) / (b0 * R)
@@ -117,22 +103,22 @@ p0_shift_vals = (np.array(
 # Plotting the graph
 fig, ax = plt.subplots(2, 4, figsize=(30, 14))
 fig.subplots_adjust(wspace=0.3, hspace=0.45)
-ax[0, 0].set_title(r"1st harmonic amplitude for differnent p0 at x = " + str(x), fontsize=8)
+ax[0, 0].set_title(r"1st harmonic amplitude for differnent p0", fontsize=8)
 ax[0, 0].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 0].set_ylabel(r"1st harmonic amplitude", fontsize=14)
 ax[0, 0].scatter(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_amp"])
 
-ax[0, 1].set_title(r"1st harmonic frequency for differnent p0 at x = " + str(x), fontsize=8)
+ax[0, 1].set_title(r"1st harmonic frequency for differnent p0", fontsize=8)
 ax[0, 1].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 1].set_ylabel(r"1st harmonic frequency", fontsize=14)
 ax[0, 1].scatter(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_freq"])
 
-ax[0, 2].set_title(r"Area under first harmonic of $|\psi|^2$ at x = " + str(x), fontsize=8)
+ax[0, 2].set_title(r"Area under first harmonic of $|\psi|^2$", fontsize=8)
 ax[0, 2].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 2].set_ylabel(r"Area under first harmonic (energy)", fontsize=14)
 ax[0, 2].scatter(p0_shift_vals, analysed_fourier_data["first_mode_ft_peak_area"])
 
-ax[0, 3].set_title(r"Area under all higher harmonics of $|\psi|^2$ at x = " + str(x), fontsize=8)
+ax[0, 3].set_title(r"Area under all higher harmonics of $|\psi|^2$", fontsize=8)
 ax[0, 3].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 3].set_ylabel(r"Area under all higher harmonics (energy)", fontsize=14)
 ax[0, 3].scatter(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"])
@@ -179,7 +165,7 @@ x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
 slope, intercept, r_value, p_value, std_err = stats.linregress(p0_shift_vals, analysed_fourier_data["first_mode_ft_peak_area"])
 y_smooth = slope * x_smooth + intercept
 
-print(f"1st mode ft frequency: slope = {slope}, intercept = {intercept}, r-value = {r_value}")
+print(f"1st mode ft peak area: slope = {slope}, intercept = {intercept}, r-value = {r_value}")
 
 ax[1, 2].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
 ax[1, 2].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')

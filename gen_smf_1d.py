@@ -94,6 +94,7 @@ def readinput():
     v0 = data0[11]
     plotnum = data0[12].astype(int)
     noise_val = data0[13]
+    seed = data0[15]
 
     return (
         nodes,
@@ -123,7 +124,7 @@ def initvars():
     x = np.linspace(0, L_dom - hx, nodes) - L_dom / 2.0
     y0 = np.complex64(np.exp(-(x**2) / (2.0 * width_psi**2)))
     y0 = y0 * np.exp(1j * v0 * x)
-    y0 = y0 * (np.ones(nodes) + 1.0e-6 * np.cos(x))
+    y0 = y0 * (np.ones(nodes) + seed * np.cos(x))
     norm = hx * np.sum(np.abs(y0) ** 2)
     y0 = y0 / np.sqrt(norm) * np.sqrt(L_dom)
     noise = (
