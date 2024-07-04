@@ -8,6 +8,7 @@ import argparse
 import glob
 import re
 from scipy import stats
+import standard_data_utils as stand_utils
 
 # fname = raw_input("Enter filename: ")
 plt.rcParams["ps.usedistiller"] = (
@@ -98,78 +99,39 @@ def find_log_exponent(x, y):
 
     return exponent, base, r_value**2
 
+
+def extract_float(filename):
+    match = re.search(r'psi\d+_([\d.e-]+)', filename)
+    if match:
+        # Remove trailing period if it exists
+        float_str = match.group(1).rstrip('.')
+        return float(float_str)
+    return 0
+
+
 data1_files = glob.glob(output_dir + "psi*")
-
-sd_vals = [
-    np.sqrt(
-        np.mean(
-            (
-                np.loadtxt(data1_files[i])[
-                    np.argmax(np.loadtxt(data1_files[i])[:, nodes // 2]), 1:
-                ]
-                - np.mean(
-                    np.loadtxt(data1_files[i])[
-                        np.argmax(np.loadtxt(data1_files[i])[:, nodes // 2]), 1:
-                    ]
-                )
-            )
-            ** 2
-        )
-    )
-    for i in range(len(data1_files))
-]
-
-mod_depth_vals = []
-    
-for file in data1_files:
-    # Load the file only once
-    data = np.loadtxt(file)
-    
-    # Find the index of maximum value in the middle column
-    max_index = np.argmax(data[:, nodes // 2])
-    
-    # Extract the relevant row
-    row_data = data[max_index, 1:]
-    
-    # Calculate max and min
-    max_val = np.max(row_data)
-    min_val = np.min(row_data)
-    
-    # Calculate modulation depth
-    mod_depth = (max_val - min_val) / (max_val + min_val) * 100
-    
-    mod_depth_vals.append(mod_depth)
-
-span_vals = [
-    np.abs(
-        (
-            np.max(
-                np.loadtxt(data1_files[i])[
-                    np.argmax(np.loadtxt(data1_files[i])[:, nodes // 2]), 1:
-                ]
-            )
-            - np.min(
-                np.loadtxt(data1_files[i])[
-                    np.argmax(np.loadtxt(data1_files[i])[:, nodes // 2]), 1:
-                ]
-            )
-        )
-    )
-    for i in range(len(data1_files))
-]
+sorted_files = sorted(data1_files, key=extract_float)
 
 p_th = (2 * gambar) / (b0 * R)
 
-#(p0 - pth) / pth
-p0_shift_vals = (np.array(
+p0_vals = np.array(
     [
-        float(re.findall(r"(\d+\.\d+e[-+]\d+)", data1_files[j])[0])
-        for j in range(len(data1_files))
+        float(re.findall(r"(\d+\.\d+e[-+]\d+)", sorted_files[j])[0])
+        for j in range(len(sorted_files))
     ]
-) / p_th) - 0.98
+)
+x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
+
+p0_above_th_vals, sorted_files_above_th = stand_utils.find_vals_above_th(p0_vals, sorted_files, p_th)
+p0_shift_vals = (p0_above_th_vals / p_th) - 1 
+
+sd_vals = stand_utils.calc_standard_deviation(sorted_files_above_th, nodes, False)
+mod_depth_vals = stand_utils.calc_modulation_depth(sorted_files_above_th, nodes, False)
+span_vals = stand_utils.calc_span(sorted_files_above_th, nodes, False)
+legett_vals = stand_utils.calc_legett_chng_p0(sorted_files_above_th, x_vals, nodes)
 
 # Plotting the graph
-fig, ax = plt.subplots(2, 3, figsize=(24, 14))
+fig, ax = plt.subplots(2, 4, figsize=(24, 14))
 fig.subplots_adjust(wspace=0.55, hspace=0.3)
 ax[0, 0].set_title(r"Spatial standard deviation of $|\psi|^2$")
 ax[0, 0].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
@@ -186,6 +148,10 @@ ax[0, 2].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 2].set_ylabel(r"Span $[|\psi|^2]$", fontsize=14)
 ax[0, 2].scatter(p0_shift_vals, span_vals)
 
+ax[0, 3].set_title(r"Legett criteria $Q_0$")
+ax[0, 3].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
+ax[0, 3].set_ylabel(r"$Q_0$", fontsize=14)
+ax[0, 3].scatter(p0_shift_vals, legett_vals)
 
 
 exponent, base, r_srd = find_log_exponent(p0_shift_vals, sd_vals)
@@ -202,7 +168,7 @@ ax[1, 0].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
 ax[1, 0].set_xscale('log')
 ax[1, 0].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 0].set_ylabel(r'$\sigma[|\psi^2|]$')
-ax[1, 0].set_title(f'Logarithmic Regression of s.d. (y = {slope:.2f} * log(x) + {intercept:.2f})')
+ax[1, 0].set_title(f'Logarithmic Regression of s.d. \n (y = {slope:.2f} * log(x) + {intercept:.2f})')
 ax[1, 0].legend()
 ax[1, 0].grid(True)
 
@@ -221,7 +187,7 @@ ax[1, 1].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
 ax[1, 1].set_xscale('log')
 ax[1, 1].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 1].set_ylabel(r'Modulation Depth $m[|\psi^2|]$')
-ax[1, 1].set_title(f'Logarithmic Regression of modulation depth (y = {slope:.2f} * log(x) + {intercept:.2f})')
+ax[1, 1].set_title(f'Logarithmic Regression of modulation depth \n (y = {slope:.2f} * log(x) + {intercept:.2f})')
 ax[1, 1].legend()
 ax[1, 1].grid(True)
 
@@ -240,7 +206,7 @@ ax[1, 2].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
 ax[1, 2].set_xscale('log')
 ax[1, 2].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 2].set_ylabel(r'Span$[|\psi^2|]$')
-ax[1, 2].set_title(f'Logarithmic Regression of span (y = {slope:.2f} * log(x) + {intercept:.2f})')
+ax[1, 2].set_title(f'Logarithmic Regression of span \n (y = {slope:.2f} * log(x) + {intercept:.2f})')
 ax[1, 2].legend()
 ax[1, 2].grid(True)
 

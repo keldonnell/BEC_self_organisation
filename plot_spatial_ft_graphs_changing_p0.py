@@ -10,6 +10,7 @@ import glob
 import re
 from scipy import integrate, stats
 import fourier_utils as fourier_utils
+import standard_data_utils as stand_utils
 
 
 # fname = raw_input("Enter filename: ")
@@ -76,29 +77,35 @@ nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnu
     readinput()
 )
 
-def extract_index(filename):
-    match = re.search(r'psi(\d+)', filename)
-    return int(match.group(1)) if match else 0
-
+def extract_float(filename):
+    match = re.search(r'psi\d+_([\d.e-]+)', filename)
+    if match:
+        # Remove trailing period if it exists
+        float_str = match.group(1).rstrip('.')
+        return float(float_str)
+    return 0
 
 data1_files = glob.glob(output_dir + "psi*")
-sorted_files = sorted(data1_files, key=extract_index)
-
+sorted_files = sorted(data1_files, key=extract_float)
 x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
 k_vals = np.fft.fftfreq(len(x_vals), np.diff(x_vals)[0])
-
-analysed_fourier_data = fourier_utils.analyse_fourier_data(sorted_files, k_vals, maxt, False)
 
 
 p_th = (2 * gambar) / (b0 * R)
 
-#(p0 - pth) / pth
-p0_shift_vals = (np.array(
+p0_vals = np.array(
     [
         float(re.findall(r"(\d+\.\d+e[-+]\d+)", sorted_files[j])[0])
         for j in range(len(sorted_files))
     ]
-) / p_th) - 0.98
+)
+
+p0_above_th_vals, sorted_files_above_th = stand_utils.find_vals_above_th(p0_vals, sorted_files, p_th)
+p0_shift_vals = (p0_above_th_vals / p_th) - 1 
+
+analysed_fourier_data = fourier_utils.analyse_fourier_data(sorted_files_above_th, k_vals, (2 * np.pi * num_crit), False)
+
+
 
 # Plotting the graph
 fig, ax = plt.subplots(2, 4, figsize=(30, 14))
@@ -159,19 +166,39 @@ ax[1, 1].legend()
 ax[1, 1].grid(True)
 
 
+exponent, base, r_srd = fourier_utils.find_log_exponent(p0_shift_vals, analysed_fourier_data["first_mode_ft_peak_area"])
+print(f"1st mode ft peak: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
+
 ax[1, 2].scatter(p0_shift_vals, analysed_fourier_data["first_mode_ft_peak_area"], label='Data')
 
 x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
-slope, intercept, r_value, p_value, std_err = stats.linregress(p0_shift_vals, analysed_fourier_data["first_mode_ft_peak_area"])
-y_smooth = slope * x_smooth + intercept
-
-print(f"1st mode ft peak area: slope = {slope}, intercept = {intercept}, r-value = {r_value}")
+slope = exponent
+intercept = np.log(base)
+y_smooth = slope * np.log(x_smooth) + intercept
 
 ax[1, 2].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
+ax[1, 2].set_xscale('log')
 ax[1, 2].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 2].set_ylabel(r'Area under first harmonic (energy)')
-ax[1, 2].set_title(f'Linear Regression of the area under the first harmonic \n (y = {slope} * x + {intercept})', fontsize=8)
+ax[1, 2].set_title(f'Logarithmic regression of the area under the first harmonic \n (y = {slope:.2f} * log(x) + {intercept:.2f})', fontsize=8)
 ax[1, 2].legend()
 ax[1, 2].grid(True)
+
+
+ax[1, 3].scatter(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"], label='Data')
+
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+slope, intercept, r_value, p_value, std_err = stats.linregress(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"])
+y_smooth = slope * x_smooth + intercept
+
+print(f"1st mode ft frequency: slope = {slope}, intercept = {intercept}, r-value = {r_value}")
+
+ax[1, 3].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
+ax[1, 3].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
+ax[1, 3].set_ylabel(r'Area under higher harmonics (energy)')
+ax[1, 3].set_title(f'Linear Regression of area under higher harmonics \n (y = {slope} * x + {intercept})', fontsize=8)
+ax[1, 3].legend()
+ax[1, 3].grid(True)
+
 
 plt.show()

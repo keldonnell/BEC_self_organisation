@@ -27,7 +27,7 @@ def find_log_exponent(x, y):
     return exponent, base, r_value**2
 
 
-def find_first_harmonic(fft_data, fft_freq_data, minimum_height = 0.003):
+def find_first_harmonic(fft_data, fft_freq_data, minimum_height = 0.00000003):
     
     # Find all peaks
     peaks, _ = find_peaks(fft_data, height = minimum_height)
@@ -52,6 +52,7 @@ def find_first_harmonic(fft_data, fft_freq_data, minimum_height = 0.003):
 
 
 def integrate_higher_modes(ft_data, freq_vals, first_harmonic_freq, harmonic_fraction=1):
+
     # Find the index of the first harmonic
     first_harmonic_idx = np.argmin(np.abs(freq_vals - first_harmonic_freq))
     
@@ -70,6 +71,7 @@ def integrate_higher_modes(ft_data, freq_vals, first_harmonic_freq, harmonic_fra
     
     # Find the index corresponding to this upper limit
     upper_idx = np.searchsorted(freq_vals, first_harmonic_upper_limit)
+
     
     # Perform the integration for all higher modes
     area_higher_modes = integrate.simps(ft_data[upper_idx:], freq_vals[upper_idx:]) * 2
@@ -151,7 +153,7 @@ def analyse_fourier_data(sorted_files, freq_vals, norm_factor, is_temporal_ft, c
     """
 
     if is_temporal_ft and cut_index == None:
-        raise Exception("You must specify a cut index for temporal fourier transfrom data")
+        raise Exception("You must specify a cut index for temporal fourier transform data")
 
     first_mode_ft_peaks_amp = []
     first_mode_ft_peaks_freq = []
@@ -167,18 +169,21 @@ def analyse_fourier_data(sorted_files, freq_vals, norm_factor, is_temporal_ft, c
         if is_temporal_ft:
             psi_cut_vals = data[:, cut_index]
         else:
-            max_index = np.argmax(data[:, len(data) // 2])
-            print(max_index)
+            max_index = np.argmax(data[:, (len(data[0,:]) // 2)])
             psi_cut_vals = data[max_index, 1:]
+
 
         fft_psi_vals = np.fft.fft(psi_cut_vals)
         fft_psi_vals = np.abs(fft_psi_vals[:len(fft_psi_vals)//2]) / (norm_factor)
+
+
 
         first_harmonic_frequency, first_harmonic_amplitude = find_first_harmonic(fft_psi_vals, freq_vals)
         first_mode_ft_peaks_amp.append(first_harmonic_amplitude)
         first_mode_ft_peaks_freq.append(first_harmonic_frequency)
 
-        first_mode_area = integrate_first_harmonic_fwhm(fft_psi_vals, freq_vals, first_harmonic_frequency, width_factor=4)[0]
+        #first_mode_area = integrate_first_harmonic_fwhm(fft_psi_vals, freq_vals, first_harmonic_frequency, width_factor=4)[0]
+        first_mode_area = integrate_first_harmonic(fft_psi_vals, freq_vals, first_harmonic_frequency)
         first_mode_ft_peak_area.append(first_mode_area)
 
         higher_mode_area = integrate_higher_modes(fft_psi_vals, freq_vals, first_harmonic_frequency)

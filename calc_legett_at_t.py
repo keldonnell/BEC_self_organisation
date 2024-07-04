@@ -6,6 +6,7 @@ import argparse
 from scipy import integrate
 import argparse
 import glob
+import standard_data_utils as stand_utils
 
 
 # fname = raw_input("Enter filename: ")
@@ -106,17 +107,11 @@ data1 = np.loadtxt(psi_dir)  # load dataset in the form t, amplitude
 
 t = float(args.time)
 t_index = int((t / maxt) * plotnum)
-
 x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
-psi_vals_at_t = data1[t_index, 1:]  # All the psi values along t_index
 
-recip_psi_vals_at_t = 1 / psi_vals_at_t
-L = 2 * np.pi * num_crit
-N = integrate.simps(psi_vals_at_t, x_vals)
-Q_0 = 1 / (integrate.simps(recip_psi_vals_at_t, x_vals) * (N / L**2))
+Q_0 = stand_utils.calc_legett(data1, x_vals, nodes, t_index)
 
 print(f"The legget criteria Q0 = {Q_0}")
-print(f"The number of atoms N = {N}")
 
 
 

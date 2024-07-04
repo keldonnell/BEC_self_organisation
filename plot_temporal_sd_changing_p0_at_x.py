@@ -8,6 +8,7 @@ import argparse
 import glob
 import re
 from scipy import stats
+import standard_data_utils as stand_utils
 
 # fname = raw_input("Enter filename: ")
 plt.rcParams["ps.usedistiller"] = (
@@ -110,58 +111,36 @@ x_index = int(
     (np.abs(x + np.pi * num_crit) / (2 * np.pi * num_crit)) * nodes
 )
 
+
+def extract_float(filename):
+    match = re.search(r'psi\d+_([\d.e-]+)', filename)
+    if match:
+        # Remove trailing period if it exists
+        float_str = match.group(1).rstrip('.')
+        return float(float_str)
+    return 0
+
+
 data1_files = glob.glob(output_dir + "psi*")
+sorted_files = sorted(data1_files, key=extract_float)
 
-sd_vals = [
-    np.sqrt(
-        np.mean(
-            (
-                np.loadtxt(data1_files[i])[:, x_index]
-                - np.mean(np.loadtxt(data1_files[i])[:, x_index])
-            )
-            ** 2
-        )
-    )
-    for i in range(len(data1_files))
-]
-
-mod_depth_vals = []
-    
-for file in data1_files:
-    # Load the file only once
-    data = np.loadtxt(file)
-    
-    # Extract the relevant row
-    row_data = data[:, x_index]
-    
-    # Calculate max and min
-    max_val = np.max(row_data)
-    min_val = np.min(row_data)
-    
-    # Calculate modulation depth
-    mod_depth = (max_val - min_val) / (max_val + min_val) * 100
-    
-    mod_depth_vals.append(mod_depth)
-
-span_vals = [
-    np.abs(
-        (
-            np.max(np.loadtxt(data1_files[i])[:, x_index])
-            - np.min(np.loadtxt(data1_files[i])[:, x_index])
-        )
-    )
-    for i in range(len(data1_files))
-]
 
 p_th = (2 * gambar) / (b0 * R)
 
-#(p0 - pth) / pth
-p0_shift_vals = (np.array(
+p0_vals = np.array(
     [
-        float(re.findall(r"(\d+\.\d+e[-+]\d+)", data1_files[j])[0])
-        for j in range(len(data1_files))
+        float(re.findall(r"(\d+\.\d+e[-+]\d+)", sorted_files[j])[0])
+        for j in range(len(sorted_files))
     ]
-) / p_th) - 0.98
+)
+
+p0_above_th_vals, sorted_files_above_th = stand_utils.find_vals_above_th(p0_vals, sorted_files, p_th)
+p0_shift_vals = (p0_above_th_vals / p_th) - 1 
+
+sd_vals = stand_utils.calc_standard_deviation(sorted_files_above_th, nodes, True, x_index)
+mod_depth_vals = stand_utils.calc_modulation_depth(sorted_files_above_th, nodes, True, x_index)
+span_vals = stand_utils.calc_span(sorted_files_above_th, nodes, True, x_index)
+
 
 # Plotting the graph
 fig, ax = plt.subplots(2, 3, figsize=(22, 14))
@@ -238,5 +217,6 @@ ax[1, 2].set_ylabel(r'Span$[|\psi^2|]$')
 ax[1, 2].set_title(f'Logarithmic Regression of span (y = {slope:.2f} * log(x) + {intercept:.2f})')
 ax[1, 2].legend()
 ax[1, 2].grid(True)
+
 
 plt.show()
