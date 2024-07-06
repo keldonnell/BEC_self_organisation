@@ -6,7 +6,7 @@
 3500.0   !Delta (Delta)
 1.14e-5  !omega_r/Gamma (omega_r)
 150.0    !Optical density (b0)
-8.0      !Number of critical wavelengths in domain (num_crit) "Not sure what this means"
+8.0      !Number of critical wavelengths in domain (num_crit)
 1.0      !Mirror reflectivity
 0.0      !Scattering length parameter (gbar)
 0.0      !Initial BEC velocity (v0)

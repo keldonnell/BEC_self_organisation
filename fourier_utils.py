@@ -195,3 +195,21 @@ def analyse_fourier_data(sorted_files, freq_vals, norm_factor, is_temporal_ft, c
         'first_mode_ft_peak_area': first_mode_ft_peak_area,
         'higher_modes_ft_peak_area': higher_modes_ft_peak_area
     }
+
+def calc_oscill_period(psi_data, x_vals, nodes, t_index = None):
+
+    if t_index == None:
+        # Find the index of maximum value in the middle column
+        max_index = np.argmax(psi_data[:, nodes // 2])
+        # Extract the relevant row
+        row_data = psi_data[max_index, 1:]
+    else:
+        row_data = psi_data[t_index, 1:]
+
+    fft_psi_vals = np.abs(np.fft.fft(row_data)[:len(fft_psi_vals)//2])
+    k_vals = np.fft.fftfreq(len(x_vals), np.diff(x_vals)[0])
+
+    abs_n_qc = find_first_harmonic(fft_psi_vals, k_vals)[1]
+
+    #DO THE REST OF THE EQUATION FOR T HERE
+
