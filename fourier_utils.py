@@ -196,7 +196,7 @@ def analyse_fourier_data(sorted_files, freq_vals, norm_factor, is_temporal_ft, c
         'higher_modes_ft_peak_area': higher_modes_ft_peak_area
     }
 
-def calc_oscill_period(psi_data, x_vals, nodes, t_index = None):
+def calc_oscill_period(psi_data, x_vals, nodes, delta, q_c, R, p0, b0, gambar, m, t_index = None):
 
     if t_index == None:
         # Find the index of maximum value in the middle column
@@ -210,6 +210,11 @@ def calc_oscill_period(psi_data, x_vals, nodes, t_index = None):
     k_vals = np.fft.fftfreq(len(x_vals), np.diff(x_vals)[0])
 
     abs_n_qc = find_first_harmonic(fft_psi_vals, k_vals)[1]
+    omega_r = hbar * q_c**2 / (2 * m)
+    gamma = omega_r / gambar
+    delta = 
+    kai0 = b0 / 2 * 
 
-    #DO THE REST OF THE EQUATION FOR T HERE
+    NEED TO CHECK WHAT "Delta" (in seed.in) IS. IS IT SMALL DELTA OR LARGE DELTA (CHECK PAPER)
 
+    omega = np.sqrt((2 * delta * (q_c**2) * R * p0 * kai0 * abs_n_qc) / m)

@@ -37,7 +37,7 @@ print_board(string1, string2)
 print()
 print_board(string3, string2)
  """
-def f(x, y):
+""" def f(x, y):
     print(x + y)
     
 
@@ -46,4 +46,14 @@ running = True
 while (running == True):
     if (check_if_3_x_in_row(board) == True):
         print("X HAS WON!!")
-        running = False
+        ru11nning = False """
+
+
+random_array = np.random.uniform(-1, 1, 20)
+print(random_array)
+
+
+
+
+
+

@@ -93,8 +93,10 @@ def readinput():
     gbar = data0[10]
     v0 = data0[11]
     plotnum = data0[12].astype(int)
-    noise_val = data0[13]
-    seed = data0[15]
+    seed = data0[13]
+    noise1 = data0[14]
+    noise2 = data0[15]
+    noise3 = data0[16]
 
     return (
         nodes,
@@ -110,7 +112,10 @@ def readinput():
         gbar,
         v0,
         plotnum,
-        noise_val,
+        seed,
+        noise1,
+        noise2,
+        noise3
     )
 
 
@@ -124,15 +129,27 @@ def initvars():
     x = np.linspace(0, L_dom - hx, nodes) - L_dom / 2.0
     y0 = np.complex64(np.exp(-(x**2) / (2.0 * width_psi**2)))
     y0 = y0 * np.exp(1j * v0 * x)
-    y0 = y0 * (np.ones(nodes) + seed * np.cos(x))
+
+    noise1_vals = (
+        np.random.uniform(-1, 1, nodes) * noise1 
+    )  
+    noise2_vals = (
+        np.random.uniform(-1, 1, nodes) * noise2 
+    )  
+    noise3_vals = (
+        np.random.uniform(-1, 1, nodes) * noise3 
+    )  
+    
+    seed_vals = seed * np.cos(x)
+
+    y0 = y0 * (np.ones(nodes) + seed_vals + noise1_vals + noise2_vals)
     norm = hx * np.sum(np.abs(y0) ** 2)
     y0 = y0 / np.sqrt(norm) * np.sqrt(L_dom)
-    noise = (
-        np.random.random_sample(nodes) * noise_val
-    )  # When is it useful to remove the *0.0?
+
+
     kx = np.fft.fftfreq(nodes, d=hx) * 2.0 * np.pi
 
-    return shift, L_dom, hx, tperplot, x, y0, noise, kx
+    return shift, L_dom, hx, tperplot, x, y0, kx, noise3_vals
 
 
 # Write data to output files
@@ -142,11 +159,12 @@ def output(t, y, p0, counter):
         name_modifier = str(counter) + "_" + str(p0)
 
     psi = y
+
     F = (
         np.sqrt(p0)
         * np.exp(-1j * b0 / (2.0 * Delta) * np.abs(psi) ** 2)
-        * (np.ones(nodes) + noise)  
     )
+
     B = calc_B(F, shift)
     s = p0 + np.abs(B) ** 2
     error = hx * np.sum((np.abs(psi)) ** 2) - L_dom
@@ -212,7 +230,6 @@ def dy(t, y, p0):
     F = (
         np.sqrt(p0)
         * np.exp(-1j * b0 / (2.0 * Delta) * (np.abs(psi)) ** 2)
-        * (np.ones(nodes) + noise)
     )
     B = calc_B(F, shift)
     return -1j * Delta / 4.0 * (p0 + np.abs(B) ** 2) * psi
@@ -235,9 +252,12 @@ def dy(t, y, p0):
     gbar,
     v0,
     plotnum,
-    noise_val,
+    seed,
+    noise1,
+    noise2,
+    noise3
 ) = readinput()
-shift, L_dom, hx, tperplot, x, y0, noise, kx = initvars()
+shift, L_dom, hx, tperplot, x, y0, kx, noise3_vals = initvars()
 
 if int(args.num_pump_frames) > 1:
     pump_params = np.linspace(
@@ -258,6 +278,12 @@ for pump_param in pump_params:
     output(t, y, p0, counter)
 
     while t < maxt:
+        
+        noise2_vals = (
+            np.random.uniform(-1, 1, nodes) * noise2 
+        )  
+        y = y * (np.ones(nodes) + noise2_vals)
+
         y = propagate_bec(y, 0.5 * ht)
         t, y = rk2(t, y, p0)
         y = propagate_bec(y, 0.5 * ht)

@@ -109,9 +109,9 @@ data1 = np.loadtxt(psi_dir)  # load dataset in the form t, amplitude
 t = float(args.time)
 t_index = int((t / maxt) * plotnum)
 x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
+m = 0
 
-
-T = fourier_utils.calc_oscill_period(data1, x_vals, nodes, t_index)
+T = fourier_utils.calc_oscill_period(data1, x_vals, nodes, Delta, num_crit, R, p0, b0, gambar, m, t_index)
 
 print(f"The period of oscillation is = {T}")
 
