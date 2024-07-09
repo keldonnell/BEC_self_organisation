@@ -3,29 +3,6 @@ import numpy as np
 from scipy.signal import find_peaks
 from scipy import integrate, stats
 
-def find_log_exponent(x, y):
-
-    # Ensure x is positive (domain of log function)
-    x = np.array(x)
-    y = np.array(y)
-    x = x[x > 0]
-    y = y[:len(x)] 
-
-    # Transform x data
-    x_log = np.log(x)
-
-    # Perform linear regression
-    slope, intercept, r_value, p_value, std_err = stats.linregress(x_log, y)
-
-    # The exponent is the slope of the linear regression
-    exponent = slope
-
-    # Calculate the base of the logarithm (e^intercept)
-    base = np.exp(intercept)
-
-
-    return exponent, base, r_value**2
-
 
 def find_first_harmonic(fft_data, fft_freq_data, minimum_height = 0.00000003):
     
@@ -114,7 +91,7 @@ def integrate_first_harmonic_fwhm(ft_data, freq_vals, first_harmonic_freq, width
     return area, fwhm
 
 
-def integrate_first_harmonic(ft_data, freq_vals, first_harmonic_freq, harmonic_fraction=1):
+def integrate_first_harmonic(ft_data, freq_vals, first_harmonic_freq, harmonic_fraction=0.75):
     # Find the index of the first harmonic
     first_harmonic_idx = np.argmin(np.abs(freq_vals - first_harmonic_freq))
     
@@ -212,9 +189,11 @@ def calc_oscill_period(psi_data, x_vals, nodes, delta, q_c, R, p0, b0, gambar, m
     abs_n_qc = find_first_harmonic(fft_psi_vals, k_vals)[1]
     omega_r = hbar * q_c**2 / (2 * m)
     gamma = omega_r / gambar
+    """
     delta = 
     kai0 = b0 / 2 * 
 
     NEED TO CHECK WHAT "Delta" (in seed.in) IS. IS IT SMALL DELTA OR LARGE DELTA (CHECK PAPER)
+    """
 
     omega = np.sqrt((2 * delta * (q_c**2) * R * p0 * kai0 * abs_n_qc) / m)

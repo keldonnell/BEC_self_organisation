@@ -146,21 +146,23 @@ ax[0, 3].set_ylabel(r"Area under all higher harmonics (energy)", fontsize=14)
 ax[0, 3].scatter(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"])
 
 
-exponent, base, r_srd = fourier_utils.find_log_exponent(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_amp"])
-print(f"1st mode ft peak: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_amp"])
+print(f"1st mode ft peak: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 0].scatter(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_amp"], label='Data')
 
+#y = coeff * x^exp
+# Generate smooth data for plotting
 x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
-slope = exponent
-intercept = np.log(base)
-y_smooth = slope * np.log(x_smooth) + intercept
+y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 0].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
+# Set log scale for both axes
 ax[1, 0].set_xscale('log')
+ax[1, 0].set_yscale('log')
 ax[1, 0].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 0].set_ylabel(r'1st harmonic amplitude')
-ax[1, 0].set_title(f'Logarithmic Regression of 1st harmonic amplitude \n (y = {slope:.2f} * log(x) + {intercept:.2f})', fontsize=8)
+ax[1, 0].set_title(f'Logarithmic Regression of 1st harmonic amplitude \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})', fontsize=8)
 ax[1, 0].legend()
 ax[1, 0].grid(True)
 
@@ -197,21 +199,23 @@ ax[1, 2].legend()
 ax[1, 2].grid(True)
 
 
-exponent, base, r_srd = fourier_utils.find_log_exponent(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"])
-print(f"1st mode ft peak: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"])
+print(f"1st mode ft peak: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 3].scatter(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"], label='Data')
 
+#y = coeff * x^exp
+# Generate smooth data for plotting
 x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
-slope = exponent
-intercept = np.log(base)
-y_smooth = slope * np.log(x_smooth) + intercept
+y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 3].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
+# Set log scale for both axes
 ax[1, 3].set_xscale('log')
+ax[1, 3].set_yscale('log')
 ax[1, 3].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 3].set_ylabel(r'Area under all higher modes (energy)')
-ax[1, 3].set_title(f'Logarithmic Regression of area under higher modes \n (y = {slope:.2f} * log(x) + {intercept:.2f})', fontsize=8)
+ax[1, 3].set_title(f'Logarithmic Regression of area under higher modes \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})', fontsize=8)
 ax[1, 3].legend()
 ax[1, 3].grid(True)
 

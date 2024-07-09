@@ -76,30 +76,6 @@ nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnu
 )
 
 
-def find_log_exponent(x, y):
-
-    # Ensure x is positive (domain of log function)
-    x = np.array(x)
-    y = np.array(y)
-    x = x[x > 0]
-    y = y[:len(x)] 
-
-    # Transform x data
-    x_log = np.log(x)
-
-    # Perform linear regression
-    slope, intercept, r_value, p_value, std_err = stats.linregress(x_log, y)
-
-    # The exponent is the slope of the linear regression
-    exponent = slope
-
-    # Calculate the base of the logarithm (e^intercept)
-    base = np.exp(intercept)
-
-
-    return exponent, base, r_value**2
-
-
 def extract_float(filename):
     match = re.search(r'psi\d+_([\d.e-]+)', filename)
     if match:
@@ -154,59 +130,65 @@ ax[0, 3].set_ylabel(r"$Q_0$", fontsize=14)
 ax[0, 3].scatter(p0_shift_vals, legett_vals)
 
 
-exponent, base, r_srd = find_log_exponent(p0_shift_vals, sd_vals)
-print(f"Standard Deviation: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, sd_vals)
+print(f"Standard Deviation: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 0].scatter(p0_shift_vals, sd_vals, label='Data')
 
+#y = coeff * x^exp
+# Generate smooth data for plotting
 x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
-slope = exponent
-intercept = np.log(base)
-y_smooth = slope * np.log(x_smooth) + intercept
+y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 0].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
+# Set log scale for both axes
 ax[1, 0].set_xscale('log')
+ax[1, 0].set_yscale('log')
 ax[1, 0].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 0].set_ylabel(r'$\sigma[|\psi^2|]$')
-ax[1, 0].set_title(f'Logarithmic Regression of s.d. \n (y = {slope:.2f} * log(x) + {intercept:.2f})')
+ax[1, 0].set_title(f'Logarithmic Regression of s.d. \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})')
 ax[1, 0].legend()
 ax[1, 0].grid(True)
 
 
-exponent, base, r_srd = find_log_exponent(p0_shift_vals, mod_depth_vals)
-print(f"Standard Deviation: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, mod_depth_vals)
+print(f"Modulation Depth: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 1].scatter(p0_shift_vals, mod_depth_vals, label='Data')
 
+#y = coeff * x^exp
+# Generate smooth data for plotting
 x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
-slope = exponent
-intercept = np.log(base)
-y_smooth = slope * np.log(x_smooth) + intercept
+y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 1].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
+# Set log scale for both axes
 ax[1, 1].set_xscale('log')
+ax[1, 1].set_yscale('log')
 ax[1, 1].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 1].set_ylabel(r'Modulation Depth $m[|\psi^2|]$')
-ax[1, 1].set_title(f'Logarithmic Regression of modulation depth \n (y = {slope:.2f} * log(x) + {intercept:.2f})')
+ax[1, 1].set_title(f'Logarithmic Regression of modulation depth \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})')
 ax[1, 1].legend()
 ax[1, 1].grid(True)
 
 
-exponent, base, r_srd = find_log_exponent(p0_shift_vals, span_vals)
-print(f"Standard Deviation: exponent = {exponent}, base = {base}, r-squared = {r_srd}")
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, span_vals)
+print(f"Span: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 2].scatter(p0_shift_vals, span_vals, label='Data')
 
+#y = coeff * x^exp
+# Generate smooth data for plotting
 x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
-slope = exponent
-intercept = np.log(base)
-y_smooth = slope * np.log(x_smooth) + intercept
+y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 2].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
+# Set log scale for both axes
 ax[1, 2].set_xscale('log')
+ax[1, 2].set_yscale('log')
 ax[1, 2].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 2].set_ylabel(r'Span$[|\psi^2|]$')
-ax[1, 2].set_title(f'Logarithmic Regression of span \n (y = {slope:.2f} * log(x) + {intercept:.2f})')
+ax[1, 2].set_title(f'Logarithmic Regression of span \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})')
 ax[1, 2].legend()
 ax[1, 2].grid(True)
 

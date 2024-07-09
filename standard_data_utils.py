@@ -85,6 +85,30 @@ def calc_modulation_depth(sorted_files, nodes, is_temporal, x_index = None):
     return mod_depth_vals
 
 
+def find_log_exponent(x, y):
+    # Ensure x and y are positive (domain of log function)
+    x = np.array(x)
+    y = np.array(y)
+    mask = (x > 0) & (y > 0)
+    x = x[mask]
+    y = y[mask]
+
+    # Transform both x and y data
+    x_log = np.log(x)
+    y_log = np.log(y)
+
+    # Perform linear regression
+    slope, intercept, r_value, p_value, std_err = stats.linregress(x_log, y_log)
+
+    # The exponent is the slope of the linear regression
+    exponent = slope
+
+    # Calculate the coefficient (e^intercept)
+    coefficient = np.exp(intercept)
+
+    return exponent, coefficient, r_value**2
+
+
 def calc_span(sorted_files, nodes, is_temporal, x_index = None):
 
     if is_temporal and x_index == None:

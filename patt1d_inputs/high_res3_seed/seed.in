@@ -10,7 +10,7 @@
 1.0      !Mirror reflectivity
 0.0      !Scattering length parameter (gbar)
 0.0      !Initial BEC velocity (v0)
-2048     !No. of outputs
+2047     !No. of outputs
 1.0e-6   !Seed (multiplied by cos(x))
 0        !Noise1 (Added to psi once at the start)
 0        !Noise2 (Adeed to psi every time step)
