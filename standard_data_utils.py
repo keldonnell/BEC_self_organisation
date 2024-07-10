@@ -1,7 +1,8 @@
 
 import numpy as np
 from scipy.signal import find_peaks
-from scipy import integrate, stats
+from scipy import integrate, stats, constants
+import fourier_utils as ft_utils
 
 
 def find_vals_above_th(p0_vals, sorted_files, p_th, min_above_th = 0.05e-7):
@@ -168,3 +169,37 @@ def calc_legett_chng_p0(sorted_files, x_vals, nodes):
     legett_vals = [calc_legett(np.loadtxt(sorted_files[i]), x_vals, nodes) for i in range(len(sorted_files))]    
 
     return legett_vals 
+
+
+def calc_oscill_omega(psi_data, x_vals, nodes, delta, R, p0, b0, gambar, decay_rate, t_index = None):
+
+    if t_index == None:
+        # Find the index of maximum value in the middle column
+        max_index = np.argmax(psi_data[:, nodes // 2])
+        # Extract the relevant row
+        row_data = psi_data[max_index, 1:]
+    else:
+        row_data = psi_data[t_index, 1:]
+
+    fft_psi_vals = np.abs(np.fft.fft(row_data, norm="forward")[:len(row_data)//2])
+    k_vals = np.fft.fftfreq(len(x_vals), np.diff(x_vals)[0])
+
+    abs_n_qc = ft_utils.find_first_harmonic(fft_psi_vals, k_vals)[1]
+
+    omega = np.sqrt((decay_rate**2 * R * p0 * b0 * gambar) / constants.hbar)
+
+    return omega
+
+
+def calc_oscill_omega_vals(sorted_files, sorted_p0_vals, x_vals, nodes, delta, R, b0, gambar, decay_rate):
+
+    oscill_omega_vals = []
+        
+    for i in range(len(sorted_files)):
+        data = np.loadtxt(sorted_files[i])
+        p0 = sorted_p0_vals[i]
+        
+        omega = calc_oscill_omega(data, x_vals, nodes, delta, R, p0, b0, gambar, decay_rate)
+        oscill_omega_vals.append(omega)
+
+    return oscill_omega_vals

@@ -160,14 +160,15 @@ ax[1, 0].legend()
 ax[1, 0].grid(True)
 
 
-exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, mod_depth_vals)
+final_fit_index = 8
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals[:final_fit_index], mod_depth_vals[:final_fit_index])
 print(f"Modulation Depth: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 1].scatter(p0_shift_vals, mod_depth_vals, label='Data')
 
 #y = coeff * x^exp
 # Generate smooth data for plotting
-x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_shift_vals))[:final_fit_index]
 y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 1].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')

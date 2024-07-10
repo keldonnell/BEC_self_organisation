@@ -105,9 +105,11 @@ sd_vals = stand_utils.calc_standard_deviation(sorted_files_above_th, nodes, Fals
 mod_depth_vals = stand_utils.calc_modulation_depth(sorted_files_above_th, nodes, False)
 span_vals = stand_utils.calc_span(sorted_files_above_th, nodes, False)
 legett_vals = stand_utils.calc_legett_chng_p0(sorted_files_above_th, x_vals, nodes)
+decay_rate = 3.77e4
+oscill_omega_vals = stand_utils.calc_oscill_omega_vals(sorted_files_above_th, p0_above_th_vals, x_vals, nodes, Delta, R, b0, gambar, decay_rate)
 
 # Plotting the graph
-fig, ax = plt.subplots(2, 4, figsize=(24, 14))
+fig, ax = plt.subplots(2, 5, figsize=(24, 14))
 fig.subplots_adjust(wspace=0.55, hspace=0.3)
 ax[0, 0].set_title(r"Spatial standard deviation of $|\psi|^2$")
 ax[0, 0].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
@@ -129,15 +131,21 @@ ax[0, 3].set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
 ax[0, 3].set_ylabel(r"$Q_0$", fontsize=14)
 ax[0, 3].scatter(p0_shift_vals, legett_vals)
 
+ax[0, 4].set_title(r"$\omega$")
+ax[0, 4].set_xlabel(r"$p_0$", fontsize=14)
+ax[0, 4].set_ylabel(r"$\omega$", fontsize=14)
+ax[0, 4].scatter(p0_above_th_vals, oscill_omega_vals)
 
-exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, sd_vals)
+
+final_fit_index = 10 
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals[:final_fit_index], sd_vals[:final_fit_index])
 print(f"Standard Deviation: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 0].scatter(p0_shift_vals, sd_vals, label='Data')
 
 #y = coeff * x^exp
 # Generate smooth data for plotting
-x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_vals))[:final_fit_index]
 y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 0].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
@@ -146,19 +154,20 @@ ax[1, 0].set_xscale('log')
 ax[1, 0].set_yscale('log')
 ax[1, 0].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 0].set_ylabel(r'$\sigma[|\psi^2|]$')
-ax[1, 0].set_title(f'Logarithmic Regression of s.d. \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})')
+ax[1, 0].set_title(f'Logarithmic Regression of s.d. \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})', fontsize=8)
 ax[1, 0].legend()
 ax[1, 0].grid(True)
 
 
-exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, mod_depth_vals)
+final_fit_index = 7 
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals[:final_fit_index], mod_depth_vals[:final_fit_index])
 print(f"Modulation Depth: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 1].scatter(p0_shift_vals, mod_depth_vals, label='Data')
 
 #y = coeff * x^exp
 # Generate smooth data for plotting
-x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_vals))[:final_fit_index]
 y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 1].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
@@ -167,19 +176,20 @@ ax[1, 1].set_xscale('log')
 ax[1, 1].set_yscale('log')
 ax[1, 1].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 1].set_ylabel(r'Modulation Depth $m[|\psi^2|]$')
-ax[1, 1].set_title(f'Logarithmic Regression of modulation depth \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})')
+ax[1, 1].set_title(f'Logarithmic Regression of modulation depth \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})', fontsize=8)
 ax[1, 1].legend()
 ax[1, 1].grid(True)
 
 
-exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, span_vals)
+final_fit_index = 10 
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals[:final_fit_index], span_vals[:final_fit_index])
 print(f"Span: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 2].scatter(p0_shift_vals, span_vals, label='Data')
 
 #y = coeff * x^exp
 # Generate smooth data for plotting
-x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_vals))[:final_fit_index]
 y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 2].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
@@ -188,8 +198,23 @@ ax[1, 2].set_xscale('log')
 ax[1, 2].set_yscale('log')
 ax[1, 2].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
 ax[1, 2].set_ylabel(r'Span$[|\psi^2|]$')
-ax[1, 2].set_title(f'Logarithmic Regression of span \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})')
+ax[1, 2].set_title(f'Logarithmic Regression of span \n (Fit: y = {coefficient:.2e} * x^{exponent:.2f})', fontsize=8)
 ax[1, 2].legend()
 ax[1, 2].grid(True)
+
+
+ax[1, 4].scatter(p0_shift_vals, oscill_omega_vals, label='Data')
+
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_shift_vals))
+slope, intercept, r_value, p_value, std_err = stats.linregress(p0_shift_vals, oscill_omega_vals)
+y_smooth = slope * x_smooth + intercept
+
+print(f"Omega: slope = {slope}, intercept = {intercept}, r-value = {r_value}")
+
+ax[1, 4].plot(x_smooth, y_smooth, 'r', label=f'(y = {slope} * x + {intercept})')
+ax[1, 4].set_xlabel(r'$\frac{p_0 - p_{th}}{p_{th}}$')
+ax[1, 4].set_ylabel(r'$\omega$')
+ax[1, 4].set_title(f'Linear Regression of omega \n (y = {slope} * x + {intercept})', fontsize=8)
+ax[1, 4].grid(True)
 
 plt.show()

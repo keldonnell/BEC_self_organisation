@@ -1,7 +1,7 @@
 
 import numpy as np
 from scipy.signal import find_peaks
-from scipy import integrate, stats
+from scipy import integrate, stats, constants
 
 
 def find_first_harmonic(fft_data, fft_freq_data, minimum_height = 0.00000003):
@@ -150,7 +150,7 @@ def analyse_fourier_data(sorted_files, freq_vals, norm_factor, is_temporal_ft, c
             psi_cut_vals = data[max_index, 1:]
 
 
-        fft_psi_vals = np.fft.fft(psi_cut_vals)
+        fft_psi_vals = np.fft.fft(psi_cut_vals, norm="forward")
         fft_psi_vals = np.abs(fft_psi_vals[:len(fft_psi_vals)//2]) / (norm_factor)
 
 
@@ -165,6 +165,7 @@ def analyse_fourier_data(sorted_files, freq_vals, norm_factor, is_temporal_ft, c
 
         higher_mode_area = integrate_higher_modes(fft_psi_vals, freq_vals, first_harmonic_frequency)
         higher_modes_ft_peak_area.append(higher_mode_area)
+
     
     return {
         'first_mode_ft_peaks_amp': first_mode_ft_peaks_amp,
@@ -172,28 +173,3 @@ def analyse_fourier_data(sorted_files, freq_vals, norm_factor, is_temporal_ft, c
         'first_mode_ft_peak_area': first_mode_ft_peak_area,
         'higher_modes_ft_peak_area': higher_modes_ft_peak_area
     }
-
-def calc_oscill_period(psi_data, x_vals, nodes, delta, q_c, R, p0, b0, gambar, m, t_index = None):
-
-    if t_index == None:
-        # Find the index of maximum value in the middle column
-        max_index = np.argmax(psi_data[:, nodes // 2])
-        # Extract the relevant row
-        row_data = psi_data[max_index, 1:]
-    else:
-        row_data = psi_data[t_index, 1:]
-
-    fft_psi_vals = np.abs(np.fft.fft(row_data)[:len(fft_psi_vals)//2])
-    k_vals = np.fft.fftfreq(len(x_vals), np.diff(x_vals)[0])
-
-    abs_n_qc = find_first_harmonic(fft_psi_vals, k_vals)[1]
-    omega_r = hbar * q_c**2 / (2 * m)
-    gamma = omega_r / gambar
-    """
-    delta = 
-    kai0 = b0 / 2 * 
-
-    NEED TO CHECK WHAT "Delta" (in seed.in) IS. IS IT SMALL DELTA OR LARGE DELTA (CHECK PAPER)
-    """
-
-    omega = np.sqrt((2 * delta * (q_c**2) * R * p0 * kai0 * abs_n_qc) / m)

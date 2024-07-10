@@ -7,7 +7,7 @@ import argparse
 from scipy import integrate
 import argparse
 import glob
-import fourier_utils as fourier_utils 
+import standard_data_utils as stand_utils 
 
 
 # fname = raw_input("Enter filename: ")
@@ -110,8 +110,8 @@ t = float(args.time)
 t_index = int((t / maxt) * plotnum)
 x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
 m = 0
-
-T = fourier_utils.calc_oscill_period(data1, x_vals, nodes, Delta, num_crit, R, p0, b0, gambar, m, t_index)
+decay_rate = 3.77e7
+omega = stand_utils.calc_oscill_omega(data1, x_vals, nodes, Delta, R, p0, b0, m, gambar, decay_rate, t_index)
 
 print(f"The period of oscillation is = {T}")
 

@@ -103,7 +103,7 @@ p0_vals = np.array(
 p0_above_th_vals, sorted_files_above_th = stand_utils.find_vals_above_th(p0_vals, sorted_files, p_th)
 p0_shift_vals = (p0_above_th_vals / p_th) - 1 
 
-analysed_fourier_data = fourier_utils.analyse_fourier_data(sorted_files_above_th, k_vals, (2 * np.pi * num_crit), False)
+analysed_fourier_data = fourier_utils.analyse_fourier_data(sorted_files_above_th, k_vals, 1, False)
 
 
 
@@ -131,14 +131,15 @@ ax[0, 3].set_ylabel(r"Area under all higher harmonics (energy)", fontsize=14)
 ax[0, 3].scatter(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"])
 
 
-exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_amp"])
+final_fit_index = 10 
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals[:final_fit_index], analysed_fourier_data["first_mode_ft_peaks_amp"][:final_fit_index])
 print(f"1st mode ft peak: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 0].scatter(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_amp"], label='Data')
 
 #y = coeff * x^exp
 # Generate smooth data for plotting
-x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_shift_vals))[:final_fit_index]
 y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 0].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
@@ -154,7 +155,7 @@ ax[1, 0].grid(True)
 
 ax[1, 1].scatter(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_freq"], label='Data')
 
-x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_shift_vals))
 slope, intercept, r_value, p_value, std_err = stats.linregress(p0_shift_vals, analysed_fourier_data["first_mode_ft_peaks_freq"])
 y_smooth = slope * x_smooth + intercept
 
@@ -168,14 +169,15 @@ ax[1, 1].legend()
 ax[1, 1].grid(True)
 
 
-exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals, analysed_fourier_data["first_mode_ft_peak_area"])
+final_fit_index = 7 
+exponent, coefficient, r_srd = stand_utils.find_log_exponent(p0_shift_vals[:final_fit_index], analysed_fourier_data["first_mode_ft_peak_area"][:final_fit_index])
 print(f"1st mode ft peak: exponent = {exponent}, coefficient = {coefficient}, r-squared = {r_srd}")
 
 ax[1, 2].scatter(p0_shift_vals, analysed_fourier_data["first_mode_ft_peak_area"], label='Data')
 
 #y = coeff * x^exp
 # Generate smooth data for plotting
-x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_shift_vals))[:final_fit_index]
 y_smooth = coefficient * x_smooth**exponent
 
 ax[1, 2].plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
@@ -191,7 +193,7 @@ ax[1, 2].grid(True)
 
 ax[1, 3].scatter(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"], label='Data')
 
-x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), 200)
+x_smooth = np.linspace(p0_shift_vals.min(), p0_shift_vals.max(), len(p0_shift_vals))
 slope, intercept, r_value, p_value, std_err = stats.linregress(p0_shift_vals, analysed_fourier_data["higher_modes_ft_peak_area"])
 y_smooth = slope * x_smooth + intercept
 
