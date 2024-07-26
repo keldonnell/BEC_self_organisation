@@ -1,83 +1,101 @@
-# Plots output from code PART1D_Q_SFM_FFT.F90
-# Shows image of optical intensity and BE density vs x and t
-
-# -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import numpy as np
-import time
-import subprocess  # For issuing commands to the OS.
-import os
-import sys  # For determining the Python version.
 import argparse
 import glob
+import standard_data_utils as stand_utils
 
-# fname = raw_input("Enter filename: ")
+# Set matplotlib parameters for better quality output
 plt.rcParams["ps.usedistiller"] = (
-    "xpdf"  # improves quality of .eps figures for use with LaTeX
+    "xpdf"  # Improves quality of .eps figures for use with LaTeX
 )
 
 
-
-parser = argparse.ArgumentParser(description="")
-
-parser.add_argument(
-    "-f",
-    "--filename",
-    metavar="filename",
-    required=True,
-    help="The name of the file to save to",
-)
-
-parser.add_argument(
-    "-i",
-    "--frame_index",
-    metavar="frame_index",
-    required=False,
-    help="The index of the frame to plot",
-)
-
-args = parser.parse_args()
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Plot PSI and S data from simulation outputs."
+    )
+    parser.add_argument(
+        "-f", "--filename", required=True, help="The name of the file to save to"
+    )
+    parser.add_argument(
+        "-i", "--frame_index", type=int, help="The index of the frame to plot"
+    )
+    return parser.parse_args()
 
 
-output_dir = "patt1d_outputs/" + args.filename + "/"
-input_dir = "patt1d_inputs/" + args.filename + "/"
-s_dir = output_dir + "s.out"
-psi_dir = output_dir + "psi.out"
-seed_dir = input_dir + "seed.in"
+def read_input(seed_dir):
+    """Read input data from seed file."""
+    data = np.genfromtxt(seed_dir, skip_footer=1, comments="!")
+    return tuple(data[:13])
 
 
-if ((len(glob.glob(output_dir + "psi*")) > 1 or len(glob.glob(output_dir + "psi*")) > 1) and args.frame_index == None):
-    raise Exception("You must specify a frame index as there is more than one file")
+def load_data(output_dir, frame_index):
+    """Load PSI and S data from files."""
+    psi_files = glob.glob(output_dir + "psi*")
+    s_files = glob.glob(output_dir + "s*")
 
-if (len(glob.glob(output_dir + "psi*")) == 1):
-    data1 = np.loadtxt(glob.glob(output_dir + f"psi*")[0])
-    data2 = np.loadtxt(glob.glob(output_dir + f"s*")[0])
-else:
-    data1 = np.loadtxt(glob.glob(output_dir + f"psi{args.frame_index}_*")[0])
-    data2 = np.loadtxt(glob.glob(output_dir + f"s{args.frame_index}_*")[0])
-    print(glob.glob(output_dir + f"psi{args.frame_index}_*")[0])
-    print(glob.glob(output_dir + f"s{args.frame_index}_*")[0])
+    if len(psi_files) > 1 and frame_index is None:
+        raise ValueError(
+            "You must specify a frame index as there is more than one file"
+        )
+
+    if len(psi_files) == 1:
+        psi_data = np.loadtxt(psi_files[0])
+        s_data = np.loadtxt(s_files[0])
+    else:
+        psi_data = np.loadtxt(glob.glob(output_dir + f"psi{frame_index}_*")[0])
+        s_data = np.loadtxt(glob.glob(output_dir + f"s{frame_index}_*")[0])
+        print(f"PSI file: {glob.glob(output_dir + f'psi{frame_index}_*')[0]}")
+        print(f"S file: {glob.glob(output_dir + f's{frame_index}_*')[0]}")
+
+    return psi_data, s_data
 
 
-# Read input data from file
-def readinput():
-    data0 = np.genfromtxt(seed_dir, skip_footer=1, comments="!")  # load input data file
+def plot_psi_s_heatmaps(psi_vals, s_vals, t_vals, num_crit):
+    """Plot heatmaps for PSI and S values."""
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    fig.subplots_adjust(wspace=0.3)
 
-    nodes = data0[0].astype(int)
-    maxt = data0[1]
-    ht = data0[2]
-    width_psi = data0[3]
-    p0 = data0[4]
-    Delta = data0[5]
-    gambar = data0[6]
-    b0 = data0[7]
-    num_crit = data0[8]
-    R = data0[9]
-    gbar = data0[10]
-    v0 = data0[11]
-    plotnum = data0[12].astype(int)
+    extent = [-np.pi * num_crit, np.pi * num_crit, 0, t_vals.max()]
 
-    return (
+    # PSI heatmap
+    f1 = ax1.imshow(psi_vals, extent=extent, origin="lower", aspect="auto", cmap="hot")
+    fig.colorbar(f1, ax=ax1, orientation="horizontal")
+    ax1.set_xlabel(r"$q_c x$", fontsize=14)
+    ax1.set_ylabel(r"$\Gamma t$", fontsize=14)
+    ax1.set_title(r"BEC density $|\Psi|^2$", fontsize=14)
+
+    # S heatmap
+    f2 = ax2.imshow(s_vals, extent=extent, origin="lower", aspect="auto", cmap="hot")
+    fig.colorbar(f2, ax=ax2, orientation="horizontal")
+    ax2.set_xlabel(r"$q_c x$", fontsize=14)
+    ax2.set_ylabel(r"$\Gamma t$", fontsize=14)
+    ax2.set_title("Intensity (s)", fontsize=14)
+
+
+def plot_temporal_cut(t_vals, psi_t_cut):
+    """Plot temporal cut along maximum starting at x = 0."""
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.set_title(r"Temporal cut along maximum starting at x = 0")
+    ax.set_xlabel(r"$\Gamma t$", fontsize=14)
+    ax.set_ylabel(r"${|\psi|}^2$", fontsize=14)
+    ax.plot(t_vals, psi_t_cut)
+
+
+def main():
+    args = parse_arguments()
+
+    output_dir = f"patt1d_outputs/{args.filename}/"
+    input_dir = f"patt1d_inputs/{args.filename}/"
+    seed_dir = input_dir + "seed.in"
+
+    # Load data
+    psi_data, s_data = load_data(output_dir, args.frame_index)
+
+    # Read input parameters
+    params = read_input(seed_dir)
+    (
         nodes,
         maxt,
         ht,
@@ -91,57 +109,20 @@ def readinput():
         gbar,
         v0,
         plotnum,
-    )
+    ) = params
+
+    # Extract data
+    psi_vals = psi_data[:, 1:]
+    s_vals = s_data[:, 1:]
+    t_vals = psi_data[:, 0]
+    psi_t_cut = stand_utils.find_temporal_cut_of_x_peaks(psi_vals, 0)
+
+    # Create plots
+    plot_psi_s_heatmaps(psi_vals, s_vals, t_vals, num_crit)
+    plot_temporal_cut(t_vals, psi_t_cut)
+
+    plt.show()
 
 
-# Nx=np.sqrt(np.size(data1,axis=1)-1).astype(int)                              #No. of points in each row for field and BEC
-
-# print 'Nx =',Nx
-# print 'Size of data1 =',np.size(data1,axis=0),np.size(data1,axis=1)
-nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnum = (
-    readinput()
-)
-
-tvec = data1[:, 0]
-psi = data1[:, 1:]
-s = data2[:, 1:]
-
-
-pi = np.pi
-xco = np.linspace(-pi * num_crit, pi * num_crit, nodes)
-
-
-fig = plt.figure()
-
-ax1 = plt.subplot(121, aspect="auto")
-f1 = ax1.imshow(
-    psi,
-    extent=[-pi * num_crit, pi * num_crit, 0, tvec.max()],
-    origin="lower",
-    vmin=psi.min(),
-    vmax=psi.max(),
-    aspect="auto",
-    cmap="hot",
-)
-cb1 = fig.colorbar(f1, orientation="horizontal")
-ax1.set_xlabel(r"$q_c x$", fontsize=14)
-ax1.set_ylabel(r"$\Gamma t$", fontsize=14)
-ax1.set_title(r"BEC density $|\Psi|^2$", fontsize=14)
-
-
-ax2 = plt.subplot(122, aspect="auto")
-f2 = ax2.imshow(
-    s,
-    extent=[-pi * num_crit, pi * num_crit, 0, tvec.max()],
-    origin="lower",
-    vmin=s.min(),
-    vmax=s.max(),
-    aspect="auto",
-    cmap="hot",
-)
-cb1 = fig.colorbar(f2, orientation="horizontal")
-ax2.set_xlabel(r"$q_c x$", fontsize=14)
-ax2.set_ylabel(r"$\Gamma t$", fontsize=14)
-ax2.set_title("Intensity (s)", fontsize=14)
-
-plt.show()
+if __name__ == "__main__":
+    main()

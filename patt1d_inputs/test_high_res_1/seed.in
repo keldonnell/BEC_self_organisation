@@ -1,0 +1,18 @@
+256      !No. of points in x 
+12e7      !Time of interaction
+1.0      !Timestep
+1.0e10   !Width of wavefunction in x
+1.82e-7  !p0 (Pump saturation parameter)
+3500.0   !Delta (Delta)
+1.14e-5  !omega_r/Gamma (omega_r)
+150.0    !Optical density (b0)
+8.0      !Number of critical wavelengths in domain (num_crit) "Not sure what this means"
+1.0      !Mirror reflectivity
+0.0      !Scattering length parameter (gbar)
+0.0      !Initial BEC velocity (v0)
+3814     !No. of outputs
+1.0e-6   !Seed (multiplied by cos(x))
+0        !Noise1 (Added to psi once at the start)
+0        !Noise2 (Adeed to psi every time step)
+0        !Noise3 (Added to F once at the start)
+.T.      !FFT output flag  

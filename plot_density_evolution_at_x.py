@@ -1,97 +1,103 @@
-# Plots the amplitude (Through time) of the psi data along one of the stable (not changing in time) amplitude lines
-
-# -*- coding: utf-8 -*-
 import matplotlib.pyplot as plt
 import numpy as np
 import argparse
+import glob
+import standard_data_utils as stand_utils
 
-# fname = raw_input("Enter filename: ")
+# Set matplotlib parameters for better quality output
 plt.rcParams["ps.usedistiller"] = (
-    "xpdf"  # improves quality of .eps figures for use with LaTeX
+    "xpdf"  # Improves quality of .eps figures for use with LaTeX
 )
 
-parser = argparse.ArgumentParser(description="")
 
-parser.add_argument(
-    "-f",
-    "--filename",
-    metavar="filename",
-    required=True,
-    help="The name of the file to save to",
-)
-
-parser.add_argument(
-    "-x",
-    "--xpos",
-    metavar="x_position",
-    required=True,
-    help="The x-position co-ord to inpect the amplitude evolution at",
-)
-
-args = parser.parse_args()
-
-
-output_dir = "patt1d_outputs/" + args.filename + "/"
-input_dir = "patt1d_inputs/" + args.filename + "/"
-s_dir = output_dir + "s.out"
-psi_dir = output_dir + "psi.out"
-seed_dir = input_dir + "seed.in"
-
-data1 = np.loadtxt(psi_dir)  # load dataset in the form t, amplitude
+def parse_arguments():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Analyze and plot psi data.")
+    parser.add_argument(
+        "-f", "--filename", required=True, help="The name of the file to save to"
+    )
+    parser.add_argument(
+        "-x",
+        "--xpos",
+        type=float,
+        required=True,
+        help="The x-position coordinate to inspect the amplitude evolution at",
+    )
+    parser.add_argument(
+        "-i", "--frame_index", type=int, help="The index of the frame to plot"
+    )
+    parser.add_argument(
+        "-t",
+        "--trail_x_max",
+        required=True,
+        choices=["True", "False"],
+        help="Specifies whether to follow the peaks that start at the required x arg",
+    )
+    return parser.parse_args()
 
 
-# Read input data from file
-def readinput():
-    data0 = np.genfromtxt(seed_dir, skip_footer=1, comments="!")  # load input data file
+def read_input(seed_dir):
+    """Read input data from file."""
+    data = np.genfromtxt(seed_dir, skip_footer=1, comments="!")
+    return tuple(data[:13])  # Return the first 13 elements as a tuple
 
-    nodes = data0[0].astype(int)
-    maxt = data0[1]
-    ht = data0[2]
-    width_psi = data0[3]
-    p0 = data0[4]
-    Delta = data0[5]
-    gambar = data0[6]
-    b0 = data0[7]
-    num_crit = data0[8]
-    R = data0[9]
-    gbar = data0[10]
-    v0 = data0[11]
-    plotnum = data0[12].astype(int)
 
-    return (
-        nodes,
-        maxt,
-        ht,
-        width_psi,
-        p0,
-        Delta,
-        gambar,
-        b0,
-        num_crit,
-        R,
-        gbar,
-        v0,
-        plotnum,
+def load_data(output_dir, frame_index):
+    """Load psi and s data from files."""
+    if frame_index is None:
+        psi_files = glob.glob(output_dir + "psi*")
+        s_files = glob.glob(output_dir + "s*")
+        if len(psi_files) > 1 or len(s_files) > 1:
+            raise Exception(
+                "You must specify a frame index as there is more than one file"
+            )
+        psi_data = np.loadtxt(psi_files[0])
+        s_data = np.loadtxt(s_files[0])
+    else:
+        psi_data = np.loadtxt(glob.glob(output_dir + f"psi{frame_index}_*")[0])
+        s_data = np.loadtxt(glob.glob(output_dir + f"s{frame_index}_*")[0])
+    return psi_data, s_data
+
+
+def main():
+    args = parse_arguments()
+
+    output_dir = f"patt1d_outputs/{args.filename}/"
+    input_dir = f"patt1d_inputs/{args.filename}/"
+    seed_dir = input_dir + "seed.in"
+
+    # Load data
+    psi_data, s_data = load_data(output_dir, args.frame_index)
+
+    # Read input parameters
+    params = read_input(seed_dir)
+    nodes, num_crit = params[0], params[8]
+
+    # Calculate x_index
+    x_index = int(
+        (np.abs(args.xpos + np.pi * num_crit) / (2 * np.pi * num_crit)) * nodes
     )
 
+    # Get psi values
+    if args.trail_x_max.upper() == "TRUE":
+        psi_cut_vals = stand_utils.find_temporal_cut_of_x_peaks(psi_data, x_index)
+    elif args.trail_x_max.upper() == "FALSE":
+        psi_cut_vals = psi_data[:, x_index]
+    else:
+        raise ValueError(
+            "Invalid input for -t. The input should be either 'True' or 'False'"
+        )
 
-nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnum = (
-    readinput()
-)
+    t_vals = psi_data[:, 0]
 
-#mid_x_index = int(np.round(len(data1[0, 1:]) / 2))
-x_index = int(
-    (np.abs(float(args.xpos) + np.pi * num_crit) / (2 * np.pi * num_crit)) * nodes
-)
-
-t_vals = data1[:, 0]
-psi_vals_at_0 = data1[:, x_index]  # All the psi values along x=0
+    # Plotting
+    fig, ax = plt.subplots(figsize=(6, 6))
+    ax.set_title(r"Evolution of $|\psi|^2$ at x = {}".format(args.xpos))
+    ax.set_xlabel(r"$\Gamma t$", fontsize=14)
+    ax.set_ylabel(r"$|\psi|^2$", fontsize=14)
+    ax.plot(t_vals, psi_cut_vals)
+    plt.show()
 
 
-# Plotting the graph
-fig, ax = plt.subplots(figsize=(6, 6))
-ax.set_title(r"Evolution of $|\psi|^2$ at x = 0")
-ax.set_xlabel(r"$\Gamma t$", fontsize=14)
-ax.set_ylabel(r"$|\psi|^2$", fontsize=14)
-ax.plot(t_vals, psi_vals_at_0)
-plt.show()
+if __name__ == "__main__":
+    main()

@@ -1,0 +1,244 @@
+\documentclass{article}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{amsmath}
+
+\title{Documentation of Python Files}
+\author{Your Name}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+
+\tableofcontents
+
+\newpage
+
+\section{Introduction}
+This document provides detailed documentation for a collection of Python scripts. It includes information on how to run each script, the arguments they accept, and the purpose of each argument.
+
+\section{Python Script Overview}
+\begin{itemize}
+    \item \texttt{gen\_smf\_1d.py}
+    \item \texttt{calc\_area\_of\_ft\_data.py}
+    \item \texttt{calc\_legett\_at\_t.py}
+    \item \texttt{calc\_oscill\_period\_at\_t.py}
+    \item \texttt{fourier\_utils.py}
+    \item \texttt{gen\_smf\_2d.py}
+    \item \texttt{plot\_density\_evolution\_at\_t.py}
+    \item \texttt{plot\_density\_evolution\_at\_x.py}
+    \item \texttt{plot\_ft\_at\_t.py}
+    \item \texttt{plot\_ft\_at\_x.py}
+    \item \texttt{plot\_intensity\_2d.py}
+    \item \texttt{plot\_intensity.py}
+    \item \texttt{plot\_spatial\_analysis\_graphs\_changing\_p0.py}
+    \item \texttt{plot\_spatial\_ft\_graphs\_changing\_p0.py}
+    \item \texttt{plot\_temporal\_analysis\_graphs\_changing\_p0\_at\_x.py}
+    \item \texttt{plot\_temporal\_ft\_graphs\_changing\_p0\_at\_x.py}
+    \item \texttt{snapshots1d\_bec\_intens.py}
+    \item \texttt{standard\_data\_utils.py}
+\end{itemize}
+
+\newpage
+
+\section{Detailed Script Documentation}
+
+\subsection{\texttt{gen\_smf\_1d.py}}
+\begin{itemize}
+    \item \textbf{Description:} Generates a new \(\lvert \psi \rvert^2\) dataset with one spatial dimension and one time dimension given some input parameters and arguments.
+    \item \textbf{Prerequisites:} 
+    \begin{itemize}
+        \item Create a folder in \texttt{/patt1d\_inputs} titled with the name of the dataset (can be named whatever you choose).
+        \item In this folder, you must have a file named \texttt{seed.in} which contains all of the initial values used to generate the dataset.
+    \end{itemize}
+    \item \textbf{Usage:} \texttt{python gen\_smf\_1d.py -f <file name> -n <number of frames> -s <start p0> -e <end p0>}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f} (required): The name of the file, which is the same name as the folder in \texttt{patt1d\_inputs}.
+        \item \texttt{-n} (required): The number of frames/generated data with different \(p_0\) values. If more than 1 is input, then you will have to specify the start and end \(p_0\) values.
+        \item \texttt{-s} (required): The starting \(p_0\) value to generate data for.
+        \item \texttt{-e} (required): The ending \(p_0\) value to generate data for.
+    \end{itemize}
+    \item \textbf{Output:} 
+    \begin{itemize}
+        \item A new folder with the inputted filename in \texttt{/patt1d\_outputs}.
+        \item In this folder will be \(n\) \texttt{psi*.out} and \texttt{s*.out} files where \(n\) is the inputted \texttt{-n} argument.
+        \item If \(n\) is greater than 1, then the \texttt{psi} and \texttt{s} filenames will be formatted to have an index followed by the \(p_0\) value at that index.
+    \end{itemize}
+    \item \textbf{Next Steps:} Once this data is obtained, all of the other Python scripts can be used to analyze this data.
+\end{itemize}
+
+\subsection{\texttt{calc\_area\_of\_ft\_data.py}}
+\begin{itemize}
+    \item \textbf{Description:} Calculates the area of FT data.
+    \item \textbf{Usage:} \texttt{python calc\_area\_of\_ft\_data.py -f <filename> -x <x\_position> -s <starting\_frequency\_position> -e <ending\_frequency\_position> [-i <frame\_index>]}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-x}, \texttt{--xpos} (required): The x coordinate to inspect the Fourier transform at.
+        \item \texttt{-s}, \texttt{--start\_f} (required): The starting frequency limit of integration.
+        \item \texttt{-e}, \texttt{--end\_f} (required): The ending frequency limit of integration.
+        \item \texttt{-i}, \texttt{--frame\_index} (optional): The index of the frame to plot.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{calc\_legett\_at\_t.py}}
+\begin{itemize}
+    \item \textbf{Description:} Calculates Leggett at time \(t\).
+    \item \textbf{Usage:} \texttt{python calc\_legett\_at\_t.py -f <filename> -t <time> [-i <frame\_index>]}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-t}, \texttt{--time} (required): The time to inspect the amplitude evolution at.
+        \item \texttt{-i}, \texttt{--frame\_index} (optional): The index of the frame to plot.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{calc\_oscill\_period\_at\_t.py}}
+\begin{itemize}
+    \item \textbf{Description:} Calculates the oscillation period at time \(t\).
+    \item \textbf{Usage:} \texttt{python calc\_oscill\_period\_at\_t.py -f <filename> -t <time> [-i <frame\_index>]}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-t}, \texttt{--time} (required): The time to inspect the amplitude evolution at.
+        \item \texttt{-i}, \texttt{--frame\_index} (optional): The index of the frame to plot.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{fourier\_utils.py}}
+\begin{itemize}
+    \item \textbf{Description:} Utility functions for Fourier transforms.
+    \item \textbf{Usage:} This file is not intended to be run directly. It contains functions used by other scripts.
+\end{itemize}
+
+\subsection{\texttt{gen\_smf\_2d.py}}
+\begin{itemize}
+    \item \textbf{Description:} Generates 2D SMF data.
+    \item \textbf{Usage:} \texttt{}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_density\_evolution\_at\_t.py}}
+\begin{itemize}
+    \item \textbf{Description:} Plots density evolution over time.
+    \item \textbf{Usage:} \texttt{python plot\_density\_evolution\_at\_t.py -f <filename> -t <time> [-i <index>]}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-t}, \texttt{--time} (required): The time to inspect the amplitude evolution at.
+        \item \texttt{-i}, \texttt{--index} (optional): The index of the frame to plot.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_density\_evolution\_at\_x.py}}
+\begin{itemize}
+    \item \textbf{Description:} Plots density evolution at a specific x position.
+    \item \textbf{Usage:} \texttt{python plot\_density\_evolution\_at\_x.py -f <filename> -x <xpos> [-i <frame\_index>] -t <trail\_x\_max>}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-x}, \texttt{--xpos} (required): The x-position coordinate to inspect the amplitude evolution at.
+        \item \texttt{-i}, \texttt{--frame\_index} (optional): The index of the frame to plot.
+        \item \texttt{-t}, \texttt{--trail\_x\_max} (required): Specifies whether to follow the peaks that start at the required x position (\texttt{True} or \texttt{False}).
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_ft\_at\_t.py}}
+\begin{itemize}
+    \item \textbf{Description:} Analyzes PATT1D output data at a specific time.
+    \item \textbf{Usage:} \texttt{python plot\_ft\_at\_t.py -f <filename> -t <time> [-i <frame\_index>]}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-t}, \texttt{--time} (required): The time to inspect the amplitude evolution at.
+        \item \texttt{-i}, \texttt{--frame\_index} (optional): The index of the frame to plot.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_ft\_at\_x.py}}
+\begin{itemize}
+    \item \textbf{Description:} Analyzes PATT1D output data at a specific x position.
+    \item \textbf{Usage:} \texttt{python plot\_ft\_at\_x.py -f <filename> -x <xpos> [-i <frame\_index>]}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-x}, \texttt{--xpos} (required): The x coordinate to inspect the Fourier transform at.
+        \item \texttt{-i}, \texttt{--frame\_index} (optional): The index of the frame to plot.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_intensity.py}}
+\begin{itemize}
+    \item \textbf{Description:} Plots PSI and S data from simulation outputs.
+    \item \textbf{Usage:} \texttt{python plot\_intensity.py -f <filename> [-i <frame\_index>]}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-i}, \texttt{--frame\_index} (optional): The index of the frame to plot.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_spatial\_analysis\_graphs\_changing\_p0.py}}
+\begin{itemize}
+    \item \textbf{Description:} Analyzes and plots data from PATT1D outputs.
+    \item \textbf{Usage:} \texttt{python plot\_spatial\_analysis\_graphs\_changing\_p0.py -f <filename>}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_spatial\_ft\_graphs\_changing\_p0.py}}
+\begin{itemize}
+    \item \textbf{Description:} Data analysis for 1D pattern formation.
+    \item \textbf{Usage:} \texttt{python plot\_spatial\_ft\_graphs\_changing\_p0.py -f <filename>}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_temporal\_analysis\_graphs\_changing\_p0\_at\_x.py}}
+\begin{itemize}
+    \item \textbf{Description:} Analyzes temporal statistics of PATT1D outputs.
+    \item \textbf{Usage:} \texttt{python plot\_temporal\_analysis\_graphs\_changing\_p0\_at\_x.py -f <filename> -x <xpos>}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-x}, \texttt{--xpos} (required): The x coordinate to inspect the temporal statistics at.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{plot\_temporal\_ft\_graphs\_changing\_p0\_at\_x.py}}
+\begin{itemize}
+    \item \textbf{Description:} Analyzes Fourier transforms of PATT1D outputs.
+    \item \textbf{Usage:} \texttt{python plot\_temporal\_ft\_graphs\_changing\_p0\_at\_x.py -f <filename> -x <xpos>}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+        \item \texttt{-x}, \texttt{--xpos} (required): The x coordinate to inspect the Fourier transform at.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{snapshots1d\_bec\_intens.py}}
+\begin{itemize}
+    \item \textbf{Description:} Generates snapshots of 1D BEC intensity.
+    \item \textbf{Usage:} \texttt{python snapshots1d\_bec\_intens.py -f <filename>}
+    \item \textbf{Arguments:}
+    \begin{itemize}
+        \item \texttt{-f}, \texttt{--filename} (required): The name of the file to save to.
+    \end{itemize}
+\end{itemize}
+
+\subsection{\texttt{standard\_data\_utils.py}}
+\begin{itemize}
+    \item \textbf{Description:} Standard utility functions for data manipulation.
+    \item \textbf{Usage:} This file is not intended to be run directly. It contains functions used by other scripts.
+\end{itemize}
+
+\end{document}
