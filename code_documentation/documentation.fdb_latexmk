@@ -1,7 +1,7 @@
 # Fdb version 4
-["pdflatex"] 1722001868.9296 "/home/kilbokingkong/Documents/research_BEC/BEC_sim/BEC_self_organisation/code_documentation/documentation.tex" "documentation.pdf" "documentation" 1722001869.56588 0
+["pdflatex"] 1722002611.84588 "/home/kilbokingkong/Documents/research_BEC/BEC_sim/BEC_self_organisation/code_documentation/documentation.tex" "documentation.pdf" "documentation" 1722002612.49968 0
   "/etc/texmf/web2c/texmf.cnf" 1720367924.76082 475 c0e671620eb5563b2130f56340a5fde8 ""
-  "/home/kilbokingkong/Documents/research_BEC/BEC_sim/BEC_self_organisation/code_documentation/documentation.tex" 1722001868.02229 11873 4da2e749db5898ae94c01a31b00b0ad2 ""
+  "/home/kilbokingkong/Documents/research_BEC/BEC_sim/BEC_self_organisation/code_documentation/documentation.tex" 1722002611.57957 11887 e0b80e5e15fbaa0fbcdbbecbc251a7d8 ""
   "/usr/share/texlive/texmf-dist/fonts/map/fontname/texfonts.map" 1577235249 3524 cb3e574dea2d1052e39280babc910dc8 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/jknappen/ec/tcrm1000.tfm" 1136768653 1536 e07581a4bb3136ece9eeb4c3ffab8233 ""
   "/usr/share/texlive/texmf-dist/fonts/tfm/public/amsfonts/cmextra/cmex7.tfm" 1246382020 1004 54797486969f23fa377b128694d548df ""
@@ -77,10 +77,10 @@
   "/usr/share/texmf/web2c/texmf.cnf" 1707919699 40399 f2c302f7d2af602abb742093540a5834 ""
   "/var/lib/texmf/fonts/map/pdftex/updmap/pdftex.map" 1720368035.97266 5472669 54eaf61a88b6b7896ebd0dac973cb29c ""
   "/var/lib/texmf/web2c/pdftex/pdflatex.fmt" 1720368188 8215518 830480e3a2a0598da19c4d3e5a8fb4e0 ""
-  "documentation.aux" 1722001869.49429 3033 2af459f4795c739a33deec6e5fc301b7 "pdflatex"
-  "documentation.out" 1722001869.49529 3801 7b54806a52ac9300e74e224ca544a4d9 "pdflatex"
-  "documentation.tex" 1722001868.02229 11873 4da2e749db5898ae94c01a31b00b0ad2 ""
-  "documentation.toc" 1722001869.49529 2034 d452274b4c9d84b78ee8b1e48e3ce950 "pdflatex"
+  "documentation.aux" 1722002612.41657 3033 2af459f4795c739a33deec6e5fc301b7 "pdflatex"
+  "documentation.out" 1722002612.41757 3801 7b54806a52ac9300e74e224ca544a4d9 "pdflatex"
+  "documentation.tex" 1722002611.57957 11887 e0b80e5e15fbaa0fbcdbbecbc251a7d8 ""
+  "documentation.toc" 1722002612.41757 2034 d452274b4c9d84b78ee8b1e48e3ce950 "pdflatex"
   (generated)
   "documentation.aux"
   "documentation.log"
