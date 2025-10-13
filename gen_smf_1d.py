@@ -67,9 +67,12 @@ seed_dir = input_dir + "seed.in"
 
 
 import os
+from pathlib import Path
 
 if not(os.path.exists(output_dir)) and os.path.exists(input_dir):
-	os.mkdir(output_dir)
+        output_dir_path = Path(output_dir)
+        output_dir_path.mkdir(parents=True, exist_ok=True)  # instead of os.mkdir(...)
+        print("THIS SHOULD ONLY BE REACHED ONCE")
 elif os.path.exists(output_dir) and args.index == None:
 	raise Exception("That filename already exits")
 
@@ -270,12 +273,30 @@ def dy(t, y, p0):
 ) = readinput()
 shift, L_dom, hx, tperplot, x, y0, kx, noise3_vals = initvars()
 
-if int(args.num_pump_frames) > 1:
+if int(args.num_pump_frames) > 1 and args.index == None:
     pump_params = np.linspace(
         float(args.start_pump_param),
         float(args.end_pump_param),
         int(args.num_pump_frames),
     )
+elif args.start_pump_param != None and args.end_pump_param !=None and args.index != None:
+    # Compute linearly spaced pump value based on index
+    start = float(args.start_pump_param)
+    end = float(args.end_pump_param)
+    idx = int(args.index)
+
+    # Determine how many intervals exist:
+    # assume N intervals corresponds to N+1 total values (matching SLURM array 0..N)
+    num_intervals = int(args.num_pump_frames)
+
+    if num_intervals > 0:
+        t = idx / num_intervals
+    else:
+        t = 0.0
+
+    p_val = start + (end - start) * t
+    pump_params = [p_val]    
+
 else:
     pump_params = [p0]
 
