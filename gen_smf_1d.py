@@ -65,13 +65,16 @@ s_dir = output_dir + "s"
 psi_dir = output_dir + "psi"
 seed_dir = input_dir + "seed.in"
 
-if os.path.exists(output_dir):
-    raise Exception("That filename already exists")
-else:
-    if os.path.exists(input_dir):
-        os.mkdir(output_dir)
-    else:
-        raise Exception("There is no input seed file associated with that filename")
+
+import os
+
+if not(os.path.exists(output_dir)) and os.path.exists(input_dir):
+	os.mkdir(output_dir)
+elif os.path.exists(output_dir) and args.index == None:
+	raise Exception("That filename already exits")
+
+	
+	
 
 
 """ # Open new output data files
