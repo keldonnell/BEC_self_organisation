@@ -42,6 +42,14 @@ parser.add_argument(
     help="The ending pump saturation param",
 )
 
+parser.add_argument(
+    "-i",
+    "--index",
+    metavar="index",
+    required=False,
+    help="The index of the p_0 value. This is used for SLURM",
+)
+
 args = parser.parse_args()
 
 if int(args.num_pump_frames) > 1 and (
@@ -155,7 +163,7 @@ def initvars():
 # Write data to output files
 def output(t, y, p0, counter):
     name_modifier = ""
-    if int(args.num_pump_frames) > 1:
+    if int(args.num_pump_frames) > 1 or args.index != None:
         name_modifier = str(counter) + "_" + str(p0)
 
     psi = y
@@ -268,7 +276,13 @@ if int(args.num_pump_frames) > 1:
 else:
     pump_params = [p0]
 
-counter = 0
+
+if args.index == None:
+    counter = 0
+else:
+    counter = int(args.index)
+
+
 for pump_param in pump_params:
     p0 = pump_param
     y = y0

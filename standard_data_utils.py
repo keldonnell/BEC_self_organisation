@@ -5,13 +5,13 @@ import fourier_utils as ft_utils
 import re
 
 # Constants
-MIN_ABOVE_THRESHOLD = 0.1e-7
+MIN_ABOVE_THRESHOLD_SCALING = 1e-3 
 PEAK_PROMINENCE_FACTOR = 3
 DEFAULT_CONFIDENCE_LEVEL = 0.95
 DEFAULT_INITIAL_PARAMS = [1, 0]
 FIRST_HARMONIC_PROMINENCE = 0.00043
 
-def find_vals_above_th(p0_vals, sorted_files, p_th, min_above_th=MIN_ABOVE_THRESHOLD):
+def find_vals_above_th(p0_vals, sorted_files, p_th):
     """
     Find values above a threshold in p0_vals and return corresponding files.
 
@@ -24,7 +24,11 @@ def find_vals_above_th(p0_vals, sorted_files, p_th, min_above_th=MIN_ABOVE_THRES
     Returns:
     tuple: (p0 values above threshold, corresponding sorted files)
     """
+    min_above_th = p_th * MIN_ABOVE_THRESHOLD_SCALING
     min_ind_above_th = next((i for i, val in enumerate(p0_vals) if val > (p_th + min_above_th)), len(p0_vals))
+    print(f"p_th is {p_th}")
+    print("THE MIN IS " + str(min_ind_above_th))
+
     return p0_vals[min_ind_above_th:], sorted_files[min_ind_above_th:]
 
 def find_temporal_cut_of_x_peaks(psi_data, starting_x_index):
