@@ -62,9 +62,10 @@ parser.add_argument(
 parser.add_argument(
     "--density-width",
     metavar="width",
+    nargs="+",
     type=float,
     required=False,
-    help="Standard deviation of the Gaussian density (in p0 units). Defaults to (end-start)/20.",
+    help="Standard deviation(s) of the Gaussian density (in p0 units). Provide one value or one per centre; defaults to (end-start)/20.",
 )
 
 parser.add_argument(
@@ -78,7 +79,7 @@ parser.add_argument(
 args = parser.parse_args()
 
 density_centers_config = list(args.density_centers) if args.density_centers else []
-density_width_config = args.density_width
+density_width_config = list(args.density_width) if args.density_width else []
 density_strength_config = args.density_strength if args.density_strength is not None else 0.0
 
 if len(density_centers_config) > 2:
@@ -265,7 +266,7 @@ def calc_B(F, shift):
     return B
 
 
-def gaussian_weighted_spacing(num_points, start, end, centres, sigma, strength):
+def gaussian_weighted_spacing(num_points, start, end, centres, sigmas, strength):
     """
     Construct a set of sample points between start and end with enhanced density near centres.
     """
@@ -275,8 +276,14 @@ def gaussian_weighted_spacing(num_points, start, end, centres, sigma, strength):
     start_val = float(start)
     end_val = float(end)
 
-    if sigma <= 0:
-        raise ValueError("Gaussian density width must be positive.")
+    centres = np.asarray(centres, dtype=float)
+    sigmas = np.asarray(sigmas, dtype=float)
+
+    if centres.shape != sigmas.shape:
+        raise ValueError("Centres and sigmas must have the same shape.")
+
+    if np.any(sigmas <= 0):
+        raise ValueError("Gaussian density widths must be positive.")
 
     # Work with monotonically increasing domain and flip back if necessary.
     flip = False
@@ -289,7 +296,7 @@ def gaussian_weighted_spacing(num_points, start, end, centres, sigma, strength):
     weights = np.ones_like(x_grid)
 
     if strength > 0 and centres:
-        for centre in centres:
+        for centre, sigma in zip(centres, sigmas):
             weights += strength * np.exp(-0.5 * ((x_grid - centre) / sigma) ** 2)
 
     cumulative = np.cumsum(weights)
@@ -360,9 +367,9 @@ end_param = float(args.end_pump_param) if args.end_pump_param is not None else N
 
 density_centres = list(density_centers_config)
 density_strength = float(density_strength_config) if density_strength_config is not None else 0.0
-density_width = density_width_config
+density_widths = list(density_width_config)
 
-gaussian_sigma = None
+gaussian_sigmas = []
 if start_param is not None and end_param is not None:
     range_min = min(start_param, end_param)
     range_max = max(start_param, end_param)
@@ -380,21 +387,36 @@ if start_param is not None and end_param is not None:
             clipped_centres.append(centre)
         density_centres = sorted(clipped_centres)
 
-    if density_width is None:
-        span = abs(end_param - start_param)
-        density_width = span / 20.0 if span > 0 else None
+        if density_widths:
+            if len(density_widths) == 1:
+                sigma_val = abs(density_widths[0])
+                gaussian_sigmas = [sigma_val] * len(density_centres)
+            elif len(density_widths) == len(density_centres):
+                gaussian_sigmas = [abs(val) for val in density_widths]
+            else:
+                raise Exception(
+                    "Provide either one density width or one per density centre."
+                )
+        else:
+            span = abs(end_param - start_param)
+            if span <= 0:
+                raise Exception(
+                    "Cannot determine a default density width when start and end are equal."
+                )
+            default_sigma = span / 20.0
+            gaussian_sigmas = [default_sigma] * len(density_centres)
 
 density_active = (
     bool(density_centres)
+    and bool(gaussian_sigmas)
     and start_param is not None
     and end_param is not None
     and density_strength > 0
 )
 
 if density_active:
-    if density_width is None or density_width <= 0:
-        raise Exception("Gaussian density width must be positive and non-zero.")
-    gaussian_sigma = density_width
+    if any(sigma <= 0 for sigma in gaussian_sigmas):
+        raise Exception("Gaussian density widths must be positive and non-zero.")
 
 if num_pump_frames > 1 and args.index == None:
     if density_active:
@@ -403,7 +425,7 @@ if num_pump_frames > 1 and args.index == None:
             start_param,
             end_param,
             density_centres,
-            gaussian_sigma,
+            gaussian_sigmas,
             density_strength,
         )
     else:
@@ -420,7 +442,7 @@ elif (
             start_param,
             end_param,
             density_centres,
-            gaussian_sigma,
+            gaussian_sigmas,
             density_strength,
         )
         if idx < 0 or idx >= len(params):

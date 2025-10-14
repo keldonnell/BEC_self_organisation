@@ -44,30 +44,35 @@ mkdir -p logs
 
 DENSITY_ARGS=()
 if [[ -n "${DENSITY_CENTERS}" ]]; then
-  centres_clean="${DENSITY_CENTERS//,/ }"
-  centres_clean="${centres_clean//:/ }"
-  centres_array=()
-  if [[ -n "${centres_clean// /}" ]]; then
-    read -r -a centres_array <<< "${centres_clean}"
-  fi
-  if [ "${#centres_array[@]}" -gt 0 ]; then
-    valid_centres=()
-    for centre in "${centres_array[@]}"; do
-      centre_trimmed="${centre#"${centre%%[![:space:]]*}"}"
-      centre_trimmed="${centre_trimmed%"${centre_trimmed##*[![:space:]]}"}"
-      if [[ -n "${centre_trimmed}" ]]; then
-        valid_centres+=( "${centre_trimmed}" )
-      fi
-    done
-    if [ "${#valid_centres[@]}" -gt 0 ]; then
-      DENSITY_ARGS+=( "--density-centers" )
-      DENSITY_ARGS+=( "${valid_centres[@]}" )
+  IFS=',: ' read -ra centres_array <<< "${DENSITY_CENTERS}"
+  filtered_centres=()
+  for centre in "${centres_array[@]}"; do
+    centre_trimmed="${centre#"${centre%%[![:space:]]*}"}"
+    centre_trimmed="${centre_trimmed%"${centre_trimmed##*[![:space:]]}"}"
+    if [[ -n "${centre_trimmed}" ]]; then
+      filtered_centres+=( "${centre_trimmed}" )
     fi
+  done
+  if [ "${#filtered_centres[@]}" -gt 0 ]; then
+    DENSITY_ARGS+=( "--density-centers" )
+    DENSITY_ARGS+=( "${filtered_centres[@]}" )
   fi
 fi
 
 if [[ -n "${DENSITY_WIDTH}" ]]; then
-  DENSITY_ARGS+=( "--density-width" "${DENSITY_WIDTH}" )
+  IFS=',: ' read -ra widths_array <<< "${DENSITY_WIDTH}"
+  filtered_widths=()
+  for width in "${widths_array[@]}"; do
+    width_trimmed="${width#"${width%%[![:space:]]*}"}"
+    width_trimmed="${width_trimmed%"${width_trimmed##*[![:space:]]}"}"
+    if [[ -n "${width_trimmed}" ]]; then
+      filtered_widths+=( "${width_trimmed}" )
+    fi
+  done
+  if [ "${#filtered_widths[@]}" -gt 0 ]; then
+    DENSITY_ARGS+=( "--density-width" )
+    DENSITY_ARGS+=( "${filtered_widths[@]}" )
+  fi
 fi
 
 if [[ -n "${DENSITY_STRENGTH}" ]]; then
