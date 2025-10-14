@@ -295,7 +295,7 @@ def gaussian_weighted_spacing(num_points, start, end, centres, sigmas, strength)
     x_grid = np.linspace(start_val, end_val, sample_count)
     weights = np.ones_like(x_grid)
 
-    if strength > 0 and centres:
+    if strength > 0 and centres.size:
         for centre, sigma in zip(centres, sigmas):
             weights += strength * np.exp(-0.5 * ((x_grid - centre) / sigma) ** 2)
 
