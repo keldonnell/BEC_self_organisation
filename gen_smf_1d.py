@@ -50,7 +50,46 @@ parser.add_argument(
     help="The index of the p_0 value. This is used for SLURM",
 )
 
+parser.add_argument(
+    "--density-centers",
+    metavar="p0",
+    nargs="+",
+    type=float,
+    required=False,
+    help="Optional list (max 2) of p0 values where additional Gaussian density should be applied.",
+)
+
+parser.add_argument(
+    "--density-width",
+    metavar="width",
+    type=float,
+    required=False,
+    help="Standard deviation of the Gaussian density (in p0 units). Defaults to (end-start)/20.",
+)
+
+parser.add_argument(
+    "--density-strength",
+    metavar="strength",
+    type=float,
+    default=5.0,
+    help="Relative strength of the Gaussian density enhancement (ignored if no centers supplied).",
+)
+
 args = parser.parse_args()
+
+density_centers_config = list(args.density_centers) if args.density_centers else []
+density_width_config = args.density_width
+density_strength_config = args.density_strength if args.density_strength is not None else 0.0
+
+if len(density_centers_config) > 2:
+    raise Exception("You may specify at most two density centres.")
+
+if density_centers_config and (
+    args.start_pump_param is None or args.end_pump_param is None
+):
+    raise Exception(
+        "Gaussian density enhancement requires both start and end pump parameters."
+    )
 
 if int(args.num_pump_frames) > 1 and (
     args.start_pump_param == None or args.end_pump_param == None
@@ -226,6 +265,48 @@ def calc_B(F, shift):
     return B
 
 
+def gaussian_weighted_spacing(num_points, start, end, centres, sigma, strength):
+    """
+    Construct a set of sample points between start and end with enhanced density near centres.
+    """
+    if num_points <= 1:
+        return np.array([start], dtype=float)
+
+    start_val = float(start)
+    end_val = float(end)
+
+    if sigma <= 0:
+        raise ValueError("Gaussian density width must be positive.")
+
+    # Work with monotonically increasing domain and flip back if necessary.
+    flip = False
+    if end_val < start_val:
+        start_val, end_val = end_val, start_val
+        flip = True
+
+    sample_count = max(2000, num_points * 40)
+    x_grid = np.linspace(start_val, end_val, sample_count)
+    weights = np.ones_like(x_grid)
+
+    if strength > 0 and centres:
+        for centre in centres:
+            weights += strength * np.exp(-0.5 * ((x_grid - centre) / sigma) ** 2)
+
+    cumulative = np.cumsum(weights)
+    cumulative /= cumulative[-1]
+
+    target_probs = np.linspace(0.0, 1.0, num_points)
+    values = np.interp(target_probs, cumulative, x_grid)
+
+    if flip:
+        values = values[::-1]
+
+    values[0] = float(start)
+    values[-1] = float(end)
+
+    return values
+
+
 # 2nd order Runge-Kutta algorithm
 def rk2(t, y, p0):
     yk1 = ht * dy(t, y, p0)
@@ -273,32 +354,96 @@ def dy(t, y, p0):
 ) = readinput()
 shift, L_dom, hx, tperplot, x, y0, kx, noise3_vals = initvars()
 
-if int(args.num_pump_frames) > 1 and args.index == None:
-    pump_params = np.linspace(
-        float(args.start_pump_param),
-        float(args.end_pump_param),
-        int(args.num_pump_frames),
-    )
-elif args.start_pump_param != None and args.end_pump_param !=None and args.index != None:
-    # Compute linearly spaced pump value based on index
-    start = float(args.start_pump_param)
-    end = float(args.end_pump_param)
-    idx = int(args.index)
+num_pump_frames = int(args.num_pump_frames)
+start_param = float(args.start_pump_param) if args.start_pump_param is not None else None
+end_param = float(args.end_pump_param) if args.end_pump_param is not None else None
 
-    # Determine how many intervals exist:
-    # assume N intervals corresponds to N+1 total values (matching SLURM array 0..N)
-    num_intervals = int(args.num_pump_frames)
+density_centres = list(density_centers_config)
+density_strength = float(density_strength_config) if density_strength_config is not None else 0.0
+density_width = density_width_config
 
-    if num_intervals > 0:
-        t = idx / num_intervals
+gaussian_sigma = None
+if start_param is not None and end_param is not None:
+    range_min = min(start_param, end_param)
+    range_max = max(start_param, end_param)
+
+    if density_centres:
+        clipped_centres = []
+        for centre in density_centres:
+            if centre < range_min or centre > range_max:
+                print(
+                    "Warning: density centre "
+                    + str(centre)
+                    + " lies outside the requested range; clipping."
+                )
+                centre = min(max(centre, range_min), range_max)
+            clipped_centres.append(centre)
+        density_centres = sorted(clipped_centres)
+
+    if density_width is None:
+        span = abs(end_param - start_param)
+        density_width = span / 20.0 if span > 0 else None
+
+density_active = (
+    bool(density_centres)
+    and start_param is not None
+    and end_param is not None
+    and density_strength > 0
+)
+
+if density_active:
+    if density_width is None or density_width <= 0:
+        raise Exception("Gaussian density width must be positive and non-zero.")
+    gaussian_sigma = density_width
+
+if num_pump_frames > 1 and args.index == None:
+    if density_active:
+        pump_params = gaussian_weighted_spacing(
+            num_pump_frames,
+            start_param,
+            end_param,
+            density_centres,
+            gaussian_sigma,
+            density_strength,
+        )
     else:
-        t = 0.0
+        pump_params = np.linspace(start_param, end_param, num_pump_frames)
+elif (
+    start_param is not None
+    and end_param is not None
+    and args.index != None
+):
+    idx = int(args.index)
+    if density_active:
+        params = gaussian_weighted_spacing(
+            num_pump_frames,
+            start_param,
+            end_param,
+            density_centres,
+            gaussian_sigma,
+            density_strength,
+        )
+        if idx < 0 or idx >= len(params):
+            raise IndexError(
+                f"Index {idx} is outside the valid range [0, {len(params) - 1}]."
+            )
+        pump_params = [params[idx]]
+    else:
+        start = start_param
+        end = end_param
+        num_intervals = num_pump_frames
 
-    p_val = start + (end - start) * t
-    pump_params = [p_val]    
+        if num_intervals > 0:
+            t = idx / num_intervals
+        else:
+            t = 0.0
 
+        p_val = start + (end - start) * t
+        pump_params = [p_val]
 else:
     pump_params = [p0]
+
+pump_params = np.atleast_1d(pump_params).astype(float)
 
 
 if args.index == None:
