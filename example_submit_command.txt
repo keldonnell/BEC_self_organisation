@@ -1,0 +1,1 @@
+./submit_smf_sweep.sh 1.9e-10 5.0e-10 200 --density-centers 2.0e-10,4.0e-10 --density-width 2.0e-11,5.0e-11 --density-strength 5.0

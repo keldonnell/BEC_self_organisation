@@ -1,6 +1,6 @@
 #!/bin/bash -l
 #SBATCH --job-name=smf_p0_sweep
-#SBATCH --time=00:10:00
+#SBATCH --time=04:00:00
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=2G
 #SBATCH --output=logs/%x-%A_%a.out

@@ -1,0 +1,117 @@
+/opt/local/miniconda_23_9/lib/python3.11/site-packages/conda/base/context.py:201: FutureWarning: Adding 'defaults' to channel list implicitly is deprecated and will be removed in 25.3. 
+
+To remove this warning, please choose a default channel explicitly with conda's regular configuration system, e.g. by adding 'defaults' to the list of channels:
+
+  conda config --add channels defaults
+
+For more information see https://docs.conda.io/projects/conda/en/stable/user-guide/configuration/use-condarc.html
+
+  deprecated.topic(
+JOB 13893 ARRAY_ID 22  -> i=22 ; range=[1.9e-10, 5.0e-10] ; intervals=200 (frames=201)
+Analytic t0 extension enabled (--extend-time-using-t0).
+Density options: centers='2.0e-10,4.0e-10' width='2.0e-11,5.0e-11' strength='7.0'
+THIS SHOULD ONLY BE REACHED ONCE
+Extending simulation time for p0=2.101e-10 from 10000000000.0 to 1.781e+10
+Completed 0 % :  mod = 1.6804593193713077e-16,  Error =-1.4210854715202004e-14
+Completed 1 % :  mod = 1.8162438696610247e-16,  Error =1.7019559095388104e-08
+Completed 2 % :  mod = 2.245540766711696e-16,  Error =3.4038563967442315e-08
+Completed 3 % :  mod = 3.037726276121434e-16,  Error =5.10578743728729e-08
+Completed 4 % :  mod = 4.320820691806482e-16,  Error =6.807580632539612e-08
+Completed 5 % :  mod = 6.302041135517002e-16,  Error =8.509388749189384e-08
+Completed 6 % :  mod = 9.30178642326428e-16,  Error =1.0211230971890473e-07
+Completed 7 % :  mod = 1.3804738218714646e-15,  Error =1.1913168407318153e-07
+Completed 8 % :  mod = 2.05385921552366e-15,  Error =1.3615160554536487e-07
+Completed 9 % :  mod = 3.059088129775724e-15,  Error =1.5316970802814467e-07
+Completed 10 % :  mod = 4.558724063509372e-15,  Error =1.701892955452422e-07
+Completed 11 % :  mod = 6.795068413290752e-15,  Error =1.8720947281281042e-07
+Completed 12 % :  mod = 1.0129523517541898e-14,  Error =2.042282645220439e-07
+Completed 13 % :  mod = 1.5100612265239595e-14,  Error =2.2124712728555096e-07
+Completed 14 % :  mod = 2.2512248348745305e-14,  Error =2.3826615347388724e-07
+Completed 15 % :  mod = 3.356195437052027e-14,  Error =2.552861388949168e-07
+Completed 16 % :  mod = 5.003540483161712e-14,  Error =2.723054493003474e-07
+Completed 17 % :  mod = 7.459309329805157e-14,  Error =2.8932365836453755e-07
+Completed 18 % :  mod = 1.1120640224950337e-13,  Error =3.063423008597965e-07
+Completed 19 % :  mod = 1.657909534166174e-13,  Error =3.2336120625586773e-07
+Completed 20 % :  mod = 2.471674465325144e-13,  Error =3.4038016138993044e-07
+Completed 21 % :  mod = 3.6847711019998756e-13,  Error =3.5739743964313675e-07
+Completed 22 % :  mod = 5.493336374888243e-13,  Error =3.7441623135237023e-07
+Completed 23 % :  mod = 8.189445561078014e-13,  Error =3.914352575407065e-07
+Completed 24 % :  mod = 1.2208334280532292e-12,  Error =4.084543547833164e-07
+Completed 25 % :  mod = 1.8197517679345427e-12,  Error =4.2547137013571046e-07
+Completed 26 % :  mod = 2.7120435423099036e-12,  Error =4.424869359809236e-07
+Completed 27 % :  mod = 4.040185829716971e-12,  Error =4.5950039861963887e-07
+Completed 28 % :  mod = 6.013218724229142e-12,  Error =4.765071466295012e-07
+Completed 29 % :  mod = 8.931397515000155e-12,  Error =4.934982911208863e-07
+Completed 30 % :  mod = 1.3206674978207848e-11,  Error =5.104581717318979e-07
+Completed 31 % :  mod = 1.9338137715701596e-11,  Error =5.273486038959163e-07
+Completed 32 % :  mod = 2.7729771090300433e-11,  Error =5.440972188353044e-07
+Completed 33 % :  mod = 3.8097756456349986e-11,  Error =5.605831034927178e-07
+Completed 34 % :  mod = 4.832697687551783e-11,  Error =5.766807973373034e-07
+Completed 35 % :  mod = 5.401131059273736e-11,  Error =5.923990968881299e-07
+Completed 36 % :  mod = 5.160989377439134e-11,  Error =6.080316694578869e-07
+Completed 37 % :  mod = 4.271692969152533e-11,  Error =6.239496954663082e-07
+Completed 38 % :  mod = 3.199915025331851e-11,  Error =6.402815557748909e-07
+Completed 39 % :  mod = 2.2648935912138194e-11,  Error =6.569360948560643e-07
+Completed 40 % :  mod = 1.5578177403210108e-11,  Error =6.737777056287086e-07
+Completed 41 % :  mod = 1.0570221927695504e-11,  Error =6.907124330268744e-07
+Completed 42 % :  mod = 7.12713826412838e-12,  Error =7.07693317281155e-07
+Completed 43 % :  mod = 4.791873641021476e-12,  Error =7.246947646422086e-07
+Completed 44 % :  mod = 3.2176187647785444e-12,  Error =7.41706003282161e-07
+Completed 45 % :  mod = 2.159340488644464e-12,  Error =7.587194588154489e-07
+Completed 46 % :  mod = 1.4487234123270965e-12,  Error =7.757376039307928e-07
+Completed 47 % :  mod = 9.718560023141246e-13,  Error =7.927557987841283e-07
+Completed 48 % :  mod = 6.519328222618311e-13,  Error =8.097743133816948e-07
+Completed 49 % :  mod = 4.3734075959451827e-13,  Error =8.267930908800736e-07
+Completed 50 % :  mod = 2.9339997156013906e-13,  Error =8.438118470621703e-07
+Completed 51 % :  mod = 1.9687075640737473e-13,  Error =8.608304753465745e-07
+Completed 52 % :  mod = 1.3215573984239907e-13,  Error =8.778496152217485e-07
+Completed 53 % :  mod = 8.879933472104655e-14,  Error =8.948684566689735e-07
+Completed 54 % :  mod = 5.979022852362969e-14,  Error =9.118866870494458e-07
+Completed 55 % :  mod = 4.04434443212142e-14,  Error =9.289058553463292e-07
+Completed 56 % :  mod = 2.7632479904473172e-14,  Error =9.459245831067165e-07
+Completed 57 % :  mod = 1.9287407125087546e-14,  Error =9.629429982283e-07
+Completed 58 % :  mod = 1.4058679707684881e-14,  Error =9.79962557323688e-07
+Completed 59 % :  mod = 1.110189278360011e-14,  Error =9.96982173262495e-07
+Completed 60 % :  mod = 9.939217492645897e-15,  Error =1.0140004320646767e-06
+Completed 61 % :  mod = 1.038269068067277e-14,  Error =1.0310181437489518e-06
+Completed 62 % :  mod = 1.2504029859132456e-14,  Error =1.0480359975417741e-06
+Completed 63 % :  mod = 1.6646071810295118e-14,  Error =1.0650544766122039e-06
+Completed 64 % :  mod = 2.3478187423896537e-14,  Error =1.0820746680906268e-06
+Completed 65 % :  mod = 3.4103742011455746e-14,  Error =1.0990913850150719e-06
+Completed 66 % :  mod = 5.0241075286146543e-14,  Error =1.1161109298996053e-06
+Completed 67 % :  mod = 7.449755925488396e-14,  Error =1.133129430286317e-06
+Completed 68 % :  mod = 1.1079310756584216e-13,  Error =1.150148150941277e-06
+Completed 69 % :  mod = 1.6498942312871365e-13,  Error =1.1671658626255521e-06
+Completed 70 % :  mod = 2.458506422330517e-13,  Error =1.1841851517147006e-06
+Completed 71 % :  mod = 3.664405374711829e-13,  Error =1.201205193979149e-06
+Completed 72 % :  mod = 5.462427571640674e-13,  Error =1.2182241277969297e-06
+Completed 73 % :  mod = 8.142819828969535e-13,  Error =1.2352419673788972e-06
+Completed 74 % :  mod = 1.2138591005259412e-12,  Error =1.2522600840725318e-06
+Completed 75 % :  mod = 1.8093832358482992e-12,  Error =1.2692775115397126e-06
+Completed 76 % :  mod = 2.696590406119376e-12,  Error =1.2862947826874915e-06
+Completed 77 % :  mod = 4.017102356163341e-12,  Error =1.3033071795121032e-06
+Completed 78 % :  mod = 5.978971773508038e-12,  Error =1.320312385644229e-06
+Completed 79 % :  mod = 8.881098879955795e-12,  Error =1.3373051714893336e-06
+Completed 80 % :  mod = 1.3133510421599438e-11,  Error =1.3542654500042772e-06
+Completed 81 % :  mod = 1.923445201125416e-11,  Error =1.3711552639961155e-06
+Completed 82 % :  mod = 2.7592775983558963e-11,  Error =1.387905378180676e-06
+Completed 83 % :  mod = 3.794200024442814e-11,  Error =1.4043971461319416e-06
+Completed 84 % :  mod = 4.820034025107518e-11,  Error =1.420501355653414e-06
+Completed 85 % :  mod = 5.398348596184253e-11,  Error =1.4362248279553569e-06
+Completed 86 % :  mod = 5.1700669651586174e-11,  Error =1.451855197842633e-06
+Completed 87 % :  mod = 4.286808554111439e-11,  Error =1.4677667863338684e-06
+Completed 88 % :  mod = 3.214758518966655e-11,  Error =1.4840953141970203e-06
+Completed 89 % :  mod = 2.2767598092215683e-11,  Error =1.50074405524947e-06
+Completed 90 % :  mod = 1.5664195731372262e-11,  Error =1.5175825325286496e-06
+Completed 91 % :  mod = 1.0629745762618126e-11,  Error =1.534517075185704e-06
+Completed 92 % :  mod = 7.167701708055822e-12,  Error =1.551496097818017e-06
+Completed 93 % :  mod = 4.819386400873784e-12,  Error =1.568497552284498e-06
+Completed 94 % :  mod = 3.236136383273231e-12,  Error =1.5855088193461597e-06
+Completed 95 % :  mod = 2.171736951606178e-12,  Error =1.6025233620098334e-06
+Completed 96 % :  mod = 1.4570529787234015e-12,  Error =1.6195408747421425e-06
+Completed 97 % :  mod = 9.774803449602929e-13,  Error =1.6365570942866725e-06
+Completed 98 % :  mod = 6.557263032690234e-13,  Error =1.6535772715542407e-06
+Completed 99 % :  mod = 4.399060631059559e-13,  Error =1.670596219582876e-06
+Completed 100 % :  mod = 2.9516612368614843e-13,  Error =1.6876156507805717e-06
+Finished 23/201 frames
+Finished all frames!
