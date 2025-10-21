@@ -34,6 +34,7 @@ INDEX=$(( INDEX_OFFSET + TID ))
 
 # --- Log what we're about to run ---
 echo "JOB $SLURM_JOB_ID ARRAY_ID $TID  -> i=${INDEX} ; range=[${P0_START}, ${P0_END}] ; intervals=${N_INTERVALS} (frames=${NUM_PUMP_FRAMES})"
+echo "Analytic t0 extension enabled (--extend-time-using-t0)."
 if [[ -n "${DENSITY_CENTERS}" || -n "${DENSITY_WIDTH}" || -n "${DENSITY_STRENGTH}" ]]; then
   echo "Density options: centers='${DENSITY_CENTERS:-}' width='${DENSITY_WIDTH:-}' strength='${DENSITY_STRENGTH:-}'"
 fi
@@ -85,4 +86,5 @@ python gen_smf_1d.py \
   -e "${P0_END}" \
   -n "${NUM_PUMP_FRAMES}" \
   -i "${INDEX}" \
+  --extend-time-using-t0 \
   "${DENSITY_ARGS[@]}"

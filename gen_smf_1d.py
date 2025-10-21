@@ -4,9 +4,15 @@ Created on Thu Oct 8 09:45:14 2020
 
 @author: Gordon Robb
 """
-import numpy as np
-import os
 import argparse
+import os
+
+import numpy as np
+
+from analytic_predictors import analytic_delay_time, pump_threshold
+
+MAX_ANALYTIC_TIME = 1e11
+TIME_EXTENSION_FACTOR = 3.0 
 
 parser = argparse.ArgumentParser(description="")
 
@@ -76,11 +82,18 @@ parser.add_argument(
     help="Relative strength of the Gaussian density enhancement (ignored if no centers supplied).",
 )
 
+parser.add_argument(
+    "--extend-time-using-t0",
+    action="store_true",
+    help="Extend simulation time to 1.5 * t0 (capped at 1e11) for p0 values above threshold.",
+)
+
 args = parser.parse_args()
 
 density_centers_config = list(args.density_centers) if args.density_centers else []
 density_width_config = list(args.density_width) if args.density_width else []
 density_strength_config = args.density_strength if args.density_strength is not None else 0.0
+extend_time_using_t0 = bool(args.extend_time_using_t0)
 
 if len(density_centers_config) > 2:
     raise Exception("You may specify at most two density centres.")
@@ -360,6 +373,10 @@ def dy(t, y, p0):
     noise3
 ) = readinput()
 shift, L_dom, hx, tperplot, x, y0, kx, noise3_vals = initvars()
+base_maxt = float(maxt)
+base_tperplot = float(tperplot)
+gamma_bar = omega_r  # Reuse the growth-rate parameter used in analytic estimates.
+pump_threshold_val = pump_threshold(gamma_bar, b0, R) if extend_time_using_t0 else None
 
 num_pump_frames = int(args.num_pump_frames)
 start_param = float(args.start_pump_param) if args.start_pump_param is not None else None
@@ -475,7 +492,32 @@ else:
 
 
 for pump_param in pump_params:
-    p0 = pump_param
+    p0 = float(pump_param)
+    maxt = base_maxt
+    tperplot = base_tperplot
+
+    if extend_time_using_t0:
+        target_maxt = base_maxt
+        if pump_threshold_val is not None and np.isfinite(pump_threshold_val) and p0 > pump_threshold_val:
+            analytic_t0 = analytic_delay_time(p0, pump_threshold_val, gamma_bar, seed)
+            if np.isfinite(analytic_t0):
+                adjusted_time = min(analytic_t0 * TIME_EXTENSION_FACTOR, MAX_ANALYTIC_TIME)
+                target_maxt = max(base_maxt, adjusted_time)
+        maxt = target_maxt
+        if plotnum > 1:
+            tperplot = maxt / np.float32(plotnum - 1)
+        else:
+            tperplot = maxt
+        if maxt - base_maxt > 1e-12:
+            print(
+                "Extending simulation time for p0="
+                + f"{p0:.3e}"
+                + " from " 
+                + f"{base_maxt}"
+                + " to "
+                + f"{maxt:.3e}"
+            )
+
     y = y0
     t = 0.0
     nextt = tperplot

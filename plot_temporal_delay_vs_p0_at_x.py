@@ -3,9 +3,10 @@ import glob
 import os
 import re
 
-import matplotlib.pyplot as plt
 import numpy as np
+import matplotlib.pyplot as plt
 import standard_data_utils as stand_utils
+from analytic_predictors import analytic_delay_time, pump_threshold
 
 
 def parse_arguments():
@@ -29,12 +30,24 @@ def parse_arguments():
 
 def read_input(seed_dir):
     data0 = np.genfromtxt(seed_dir, skip_footer=1, comments="!")
-    return (
-        data0[0].astype(int),  # nodes
-        *data0[1:12],
-        data0[12].astype(int),  # plotnum
-        data0[13].astype(float),
-    )
+    gamma_bar_val = float(data0[6])
+    return {
+        "nodes": int(data0[0]),
+        "maxt": float(data0[1]),
+        "ht": float(data0[2]),
+        "width_psi": float(data0[3]),
+        "p0": float(data0[4]),
+        "Delta": float(data0[5]),
+        "gamma_bar": gamma_bar_val,
+        "omega_r": gamma_bar_val,
+        "b0": float(data0[7]),
+        "num_crit": float(data0[8]),
+        "R": float(data0[9]),
+        "gbar": float(data0[10]),
+        "v0": float(data0[11]),
+        "plotnum": int(data0[12]),
+        "seed": float(data0[13]),
+    }
 
 
 def extract_float(filename):
@@ -79,12 +92,7 @@ def compute_delay_times(sorted_files, p0_vals, x_index):
 
     return np.array(valid_p0, dtype=float), np.array(delay_times, dtype=float)
 
-def t0_analytic(p0, p_th, gambar, seed):
-
-    M0 = seed
-    return np.arccosh(np.sqrt(2) * (p_th / p0) * np.sqrt((p0 / p_th) - 1) / M0) / (np.sqrt((p0 / p_th) - 1) * gambar)
-
-def create_plot(p0_vals, delay_times, p0_analtic_vals, t0_analtic_vals, p_th, x):
+def create_plot(p0_vals, delay_times, p0_analytic_vals, t0_analytic_vals, p_th, x):
 
     fig, ax = plt.subplots(figsize=(9, 6))
 
@@ -92,8 +100,8 @@ def create_plot(p0_vals, delay_times, p0_analtic_vals, t0_analtic_vals, p_th, x)
     # Plotting the analtic function
 
     ax.plot(
-        p0_analtic_vals,
-        t0_analtic_vals,
+        p0_analytic_vals,
+        t0_analytic_vals,
         color="C0",
         linewidth=1.5,
         zorder=2,
@@ -137,22 +145,14 @@ def main():
     input_dir = os.path.join("patt1d_inputs", args.filename)
     seed_dir = os.path.join(input_dir, "seed.in")
 
-    (
-        nodes,
-        maxt,
-        ht,
-        width_psi,
-        p0,
-        Delta,
-        gambar,
-        b0,
-        num_crit,
-        R,
-        gbar,
-        v0,
-        plotnum,
-        seed
-    ) = read_input(seed_dir)
+    params = read_input(seed_dir)
+
+    nodes = params["nodes"]
+    num_crit = params["num_crit"]
+    b0 = params["b0"]
+    reflectivity = params["R"]
+    gamma_bar = params["gamma_bar"]
+    seed = params["seed"]
 
     x = float(args.xpos)
     x_index = int((np.abs(x + np.pi * num_crit) / (2 * np.pi * num_crit)) * nodes)
@@ -160,7 +160,7 @@ def main():
     sorted_files = load_data(output_dir)
     all_p0_vals = stand_utils.find_p0_vals_from_filenames(sorted_files)
 
-    p_th = (2 * gambar) / (b0 * R)
+    p_th = pump_threshold(gamma_bar, b0, reflectivity)
 
     p0_above_th_vals, sorted_files_above_th = stand_utils.find_vals_above_th(all_p0_vals, sorted_files, p_th)
 
@@ -174,10 +174,10 @@ def main():
     above_threshold = p0_vals[p0_vals > (p_th * 1.001)]
     p0_min_for_curve = above_threshold.min() if above_threshold.size else p0_vals.min()
     p0_analytic_vals = np.linspace(p0_min_for_curve, p0_vals.max(), num_analytic_datapoints)
-    t0_analtic_vals = t0_analytic(p0_analytic_vals, p_th, gambar, seed)
-    print(t0_analtic_vals)
+    t0_analytic_vals = analytic_delay_time(p0_analytic_vals, p_th, gamma_bar, seed)
+    print(t0_analytic_vals)
 
-    create_plot(p0_vals, delay_times, p0_analytic_vals, t0_analtic_vals, p_th, x)
+    create_plot(p0_vals, delay_times, p0_analytic_vals, t0_analytic_vals, p_th, x)
     plt.show()
 
 
