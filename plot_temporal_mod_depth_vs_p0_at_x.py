@@ -62,17 +62,50 @@ def calc_mod_depth_vs_p0(sorted_files, nodes, x_index):
     mod_depth_vals = stand_utils.calc_modulation_depth(sorted_files, nodes, True, x_index)
     p0_vals = stand_utils.find_p0_vals_from_filenames(sorted_files)
 
-    return np.array(p0_vals), np.array(mod_depth_vals)
+    return np.array(p0_vals), np.array(mod_depth_vals) / 100.0
 
 
-def create_plot(p0_vals, mod_depth_vals, x):
+def create_plot(p0_vals, mod_depth_vals, x, p0_samples, m0_vals, p_th):
     """Create the modulation depth vs p0 scatter plot."""
-    fig, ax = plt.subplots(figsize=(8, 6))
-    ax.scatter(p0_vals, mod_depth_vals)
-    ax.set_xlabel(r"$p_0$")
-    ax.set_ylabel(r"Modulation depth $m[|\psi|^2]$ (%)")
-    ax.set_title(rf"Temporal modulation depth vs $p_0$ at $x = {x}$")
-    ax.grid(True, alpha=0.3)
+    fig, ax = plt.subplots(figsize=(9, 6))
+
+    ax.scatter(
+        p0_vals,
+        mod_depth_vals,
+        color="C0",
+        edgecolor="black",
+        linewidth=0.6,
+        s=30,
+        label="Simulation",
+        zorder=3,
+    )
+
+    if m0_vals.size:
+        ax.plot(
+            p0_samples,
+            m0_vals,
+            color="C1",
+            linewidth=2.2,
+            label=r"$M_0$ analytic",
+            zorder=4,
+        )
+
+    ax.axvline(p_th, color="k", linestyle="--", linewidth=1.2, label=r"$p_{th}$", zorder=2)
+
+    ax.set_xlabel(r"Pump strength $p_0$", fontsize=13)
+    ax.set_ylabel(r"Modulation depth $m[|\psi|^2]$", fontsize=13)
+    ax.set_title(rf"Temporal modulation depth at $x = {x}$", fontsize=14)
+    ax.minorticks_on()
+    ax.tick_params(axis="both", which="both", direction="in", top=True, right=True)
+    ax.grid(which="major", linestyle=":", alpha=0.4)
+    ax.grid(which="minor", linestyle=":", alpha=0.15)
+    ax.legend(frameon=False, loc="lower right")
+
+    if p0_vals.size:
+        ax.set_xlim(p0_vals.min() * 0.98, p0_vals.max() * 1.02)
+    ax.set_ylim(bottom=0)
+
+    fig.tight_layout()
     return fig, ax
 
 
@@ -109,7 +142,22 @@ def main():
     sorted_files = load_data(output_dir)
     p0_vals, mod_depth_vals = calc_mod_depth_vs_p0(sorted_files, nodes, x_index)
 
-    create_plot(p0_vals, mod_depth_vals, x)
+    p_th = (2 * gambar) / (b0 * R)
+
+    if p0_vals.size:
+        p0_min, p0_max = p0_vals.min(), p0_vals.max()
+        if p0_min == p0_max:
+            p0_samples = np.array([p0_min])
+        else:
+            p0_samples = np.linspace(p0_min, p0_max, max(len(p0_vals), 200))
+        with np.errstate(divide="ignore", invalid="ignore"):
+            m0_vals = np.sqrt(2 * p_th * np.maximum(p0_samples - p_th, 0) / (p0_samples**2))
+            m0_vals = np.where(p0_samples > 0, m0_vals, np.nan)
+    else:
+        p0_samples = np.array([])
+        m0_vals = np.array([])
+
+    create_plot(p0_vals, mod_depth_vals, x, p0_samples, m0_vals, p_th)
     plt.show()
 
 

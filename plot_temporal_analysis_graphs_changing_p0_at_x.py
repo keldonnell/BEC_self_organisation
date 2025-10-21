@@ -98,7 +98,7 @@ def calculate_values(sorted_files, nodes, p_th, x_index):
     mod_depth_vals = stand_utils.calc_modulation_depth(sorted_files_above_th, nodes, True, x_index)
     span_vals = stand_utils.calc_span(sorted_files_above_th, nodes, True, x_index)
 
-    return p0_shift_vals, sd_vals, mod_depth_vals, span_vals
+    return p0_shift_vals, p0_above_th_vals, sd_vals, mod_depth_vals, span_vals
 
 def create_plots(p0_shift_vals, sd_vals, mod_depth_vals, span_vals, x):
     """
@@ -131,6 +131,44 @@ def create_plots(p0_shift_vals, sd_vals, mod_depth_vals, span_vals, x):
         ax_plot.scatter(p0_shift_vals, data)
 
     return fig, ax
+
+def create_linear_plots(p0_vals, sd_vals, mod_depth_vals, span_vals, p_th, x):
+    """
+    Create linear-scale plots of the temporal metrics versus p0.
+
+    Args:
+        p0_vals (np.array): p0 values above threshold
+        sd_vals (np.array): Standard deviation values
+        mod_depth_vals (np.array): Modulation depth values
+        span_vals (np.array): Span values
+        p_th (float): Threshold p0 value
+        x (float): X position being analyzed
+
+    Returns:
+        tuple: Figure and axes objects
+    """
+    fig, axs = plt.subplots(1, 3, figsize=(21, 6))
+    fig.subplots_adjust(wspace=0.35)
+
+    plot_data = [
+        (axs[0], r"Temporal standard deviation of $|\psi|^2$ at x = " + str(x), r"$\sigma[|\psi|^2]$", sd_vals),
+        (axs[1], r"Modulation depth of $|\psi|^2$ at x = " + str(x), r"Modulation depth m$[|\psi|^2]$", mod_depth_vals),
+        (axs[2], r"Span of $|\psi|^2$ at x = " + str(x), r"Span $[|\psi|^2]$", span_vals),
+    ]
+
+    for i, (ax_plot, title, ylabel, data) in enumerate(plot_data):
+        ax_plot.set_title(title)
+        ax_plot.set_xlabel(r"$p_0$", fontsize=14)
+        ax_plot.set_ylabel(ylabel, fontsize=14)
+        ax_plot.scatter(p0_vals, data)
+        if i == 0:
+            ax_plot.axvline(p_th, color="red", linestyle="--", label=r"$p_{th}$")
+            ax_plot.legend()
+        else:
+            ax_plot.axvline(p_th, color="red", linestyle="--")
+        ax_plot.grid(True, alpha=0.3)
+
+    return fig, axs
 
 def fit_and_plot(ax, x_vals, y_vals, xlabel, ylabel, title, final_fit_index=None):
     """
@@ -203,10 +241,11 @@ def main():
     p_th = (2 * gambar) / (b0 * R)
 
     # Calculate various values
-    p0_shift_vals, sd_vals, mod_depth_vals, span_vals = calculate_values(sorted_files, nodes, p_th, x_index)
+    p0_shift_vals, p0_vals_above_th, sd_vals, mod_depth_vals, span_vals = calculate_values(sorted_files, nodes, p_th, x_index)
 
     # Create initial plots
     fig, ax = create_plots(p0_shift_vals, sd_vals, mod_depth_vals, span_vals, x)
+    fig_linear, _ = create_linear_plots(p0_vals_above_th, sd_vals, mod_depth_vals, span_vals, p_th, x)
 
     # Define data for logarithmic regression plots
     fit_data = [
