@@ -104,7 +104,7 @@ def calc_modulation_depth(sorted_files, nodes, is_temporal, x_index=None):
         data = np.loadtxt(file)
         cut_data = find_temporal_cut_of_x_peaks(data, x_index) if is_temporal else data[np.argmax(data[:, nodes // 2]), 1:]
         max_val, min_val = np.max(cut_data), np.min(cut_data)
-        mod_depth = (max_val - min_val) / (max_val + min_val) * 100
+        mod_depth = (max_val - min_val) / (max_val + min_val)
         mod_depth_vals.append(mod_depth)
 
     return mod_depth_vals

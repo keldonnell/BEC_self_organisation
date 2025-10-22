@@ -5,8 +5,12 @@ import re
 
 import numpy as np
 import matplotlib.pyplot as plt
+from scipy.signal import find_peaks
 import standard_data_utils as stand_utils
 from analytic_predictors import analytic_delay_time, pump_threshold
+
+RELATIVE_HEIGHT_THRESHOLD = 1e-3
+MIN_PROMINENCE = 1e-6
 
 
 def parse_arguments():
@@ -63,19 +67,20 @@ def load_data(output_dir):
     return sorted(data_files, key=extract_float)
 
 
-def find_first_deviation_time(psi_data, x_index, tol=1e-6):
+def find_first_peak_time(psi_data, x_index):
     spatial_data = psi_data[:, 1:]
     spatial_idx = int(np.clip(x_index, 0, spatial_data.shape[1] - 1))
     trace = spatial_data[:, spatial_idx]
 
-    deviations = np.where(np.abs(trace - 1.0) > tol)[0]
-    if deviations.size == 0:
-        return np.nan
-    idx = deviations[0]
-    if idx >= psi_data.shape[0]:
-        return np.nan
+    baseline = trace[0]
+    peak_indices, properties = find_peaks(trace, prominence=0.25 * np.max(trace))
 
-    return psi_data[idx, 0]
+    if len(peak_indices) > 0:
+        return psi_data[peak_indices[0], 0]
+    else:
+        print("Didn't find any peaks")
+
+    return np.nan
 
 
 def compute_delay_times(sorted_files, p0_vals, x_index):
@@ -84,7 +89,7 @@ def compute_delay_times(sorted_files, p0_vals, x_index):
 
     for file, p0 in zip(sorted_files, p0_vals):
         data = np.loadtxt(file)
-        t0 = find_first_deviation_time(data, x_index)
+        t0 = find_first_peak_time(data, x_index)
         if np.isnan(t0):
             continue
         valid_p0.append(p0)
