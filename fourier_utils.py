@@ -210,3 +210,43 @@ def analyse_fourier_data(sorted_files, freq_vals, norm_factor, is_temporal_ft, c
         'first_mode_ft_peak_area': first_mode_ft_peak_area,
         'higher_modes_ft_peak_area': higher_modes_ft_peak_area
     }
+
+
+
+def calculate_nqc_amplitude(psi_vals, num_crit, norm_density=True):
+    """
+    Calculate |n^{q_c}| — the modulus of the density Fourier component at the critical wavenumber.
+
+    Args:
+        psi_vals (np.ndarray): 1D complex array of the wavefunction ψ(x)
+        num_crit (float): Number of critical wavelengths in the simulation domain
+                          (from the simulation input)
+        norm_density (bool): If True, normalize so the mean density <|ψ|²> = 1
+
+    Returns:
+        float: |n^{q_c}|
+    """
+    N = len(psi_vals)
+    L = 2 * np.pi * num_crit       # Domain length in code units
+    dx = L / N
+
+    # Density
+    rho = np.abs(psi_vals)**2
+
+    # Normalize the average density to 1 if required
+    if norm_density:
+        rho /= np.mean(rho)
+
+    # Compute FFT of the density
+    rho_k = np.fft.fft(rho)
+
+    # Build the k-grid (same scaling as simulation)
+    k_vals = np.fft.fftfreq(N, d=dx) * 2 * np.pi
+
+    # Find the FFT bin closest to k = +1 (critical mode)
+    idx_crit = np.argmin(np.abs(k_vals - 1.0))
+
+    # Convert discrete FFT to continuum-normalized coefficient:
+    # n(k) ≈ (1/L) ∫ ρ(x) e^{-ikx} dx  ≈ (dx / L) * sum_j ρ_j e^{-ikx_j}
+    n_qc = (dx / L) * rho_k[idx_crit]
+    return np.abs(n_qc)

@@ -91,7 +91,7 @@ def calculate_values(sorted_files, nodes, p_th, x_vals, Delta, R, b0, gambar):
     p0_vals = stand_utils.find_p0_vals_from_filenames(sorted_files)
     
     # Find values above threshold
-    p0_above_th_vals, sorted_files_above_th = stand_utils.find_vals_above_th(p0_vals, sorted_files, p_th, 0.1e-7)
+    p0_above_th_vals, sorted_files_above_th = stand_utils.find_vals_above_th(p0_vals, sorted_files, p_th)
     p0_shift_vals = (p0_above_th_vals / p_th) - 1
 
     # Calculate various statistical measures

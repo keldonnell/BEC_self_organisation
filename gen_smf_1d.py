@@ -12,7 +12,7 @@ import numpy as np
 from analytic_predictors import analytic_delay_time, pump_threshold
 
 MAX_ANALYTIC_TIME = 1e11
-TIME_EXTENSION_FACTOR = 3.0 
+TIME_EXTENSION_FACTOR = 2.5 
 
 parser = argparse.ArgumentParser(description="")
 
@@ -502,7 +502,7 @@ for pump_param in pump_params:
             analytic_t0 = analytic_delay_time(p0, pump_threshold_val, gamma_bar, seed)
             if np.isfinite(analytic_t0):
                 adjusted_time = min(analytic_t0 * TIME_EXTENSION_FACTOR, MAX_ANALYTIC_TIME)
-                target_maxt = max(base_maxt, adjusted_time)
+                target_maxt = adjusted_time
         maxt = target_maxt
         if plotnum > 1:
             tperplot = maxt / np.float32(plotnum - 1)

@@ -138,8 +138,8 @@ def create_plot(p0_vals, mod_depth_vals, ft_amp_vals, x, p0_samples, m_max_vals,
     ax.axvline(p_th, color="k", linestyle="--", linewidth=1.2, label=r"$p_{th}$", zorder=2)
 
     ax.set_xlabel(r"Pump strength $p_0$", fontsize=13)
-    ax.set_ylabel(r"Modulation depth $m[|\psi|^2]$", fontsize=13)
-    ax.set_title(rf"Spatial modulation depth at $x = {x}$", fontsize=14)
+    ax.set_ylabel(r"M", fontsize=13)
+    ax.set_title(rf"Magnetization", fontsize=14)
     ax.minorticks_on()
     ax.tick_params(axis="both", which="both", direction="in", top=True, right=True)
     ax.grid(which="major", linestyle=":", alpha=0.4)
@@ -198,7 +198,7 @@ def main():
         if p0_min == p0_max:
             p0_samples = np.array([p0_min])
         else:
-            p0_samples = np.linspace(p0_min, p0_max, max(len(p0_vals), 200))
+            p0_samples = np.linspace(p0_min, p0_max, max(len(p0_vals), 5000))
         with np.errstate(divide="ignore", invalid="ignore"):
             m_max_vals = np.sqrt(2 * p_th * np.maximum(p0_samples - p_th, 0) / (p0_samples**2))
             m_max_vals = np.where(p0_samples > 0, m_max_vals, np.nan)

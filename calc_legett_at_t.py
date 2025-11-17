@@ -3,6 +3,7 @@ import numpy as np
 import argparse
 import glob
 import standard_data_utils as stand_utils
+from fourier_utils import _simpson
 
 # Set matplotlib parameters for better quality output
 plt.rcParams["ps.usedistiller"] = (

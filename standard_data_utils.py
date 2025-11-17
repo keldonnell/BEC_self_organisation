@@ -188,8 +188,8 @@ def calc_legett(psi_data, x_vals, nodes, t_index=None):
     row_data = psi_data[t_index, 1:] if t_index is not None else psi_data[np.argmax(psi_data[:, nodes // 2]), 1:]
     recip_psi_vals_at_t = 1 / row_data
     L = np.abs(x_vals[-1] - x_vals[0])
-    N = integrate.simps(row_data, x_vals)
-    Q_0 = 1 / (integrate.simps(recip_psi_vals_at_t, x_vals) * (N / L**2))
+    N = ft_utils._simpson(row_data, x_vals)
+    Q_0 = 1 / (ft_utils._simpson(recip_psi_vals_at_t, x_vals) * (N / L**2))
     return Q_0
 
 def calc_legett_chng_p0(sorted_files, x_vals, nodes):

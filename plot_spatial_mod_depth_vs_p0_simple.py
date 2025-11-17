@@ -140,7 +140,7 @@ def main():
     if mod_depth_t0_vals.size:
         ax.scatter(
             p0_vals_t0,
-            mod_depth_t0_vals,
+            mod_depth_t0_vals / 2,
             color="tab:orange",
             marker="o",
             s=35,
