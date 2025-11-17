@@ -81,7 +81,7 @@ if [[ -n "${DENSITY_STRENGTH}" ]]; then
 fi
 
 python gen_smf_1d.py \
-  -f ivan_diss_params \
+  -f ivan_diss_params_high_t_res \
   -s "${P0_START}" \
   -e "${P0_END}" \
   -n "${NUM_PUMP_FRAMES}" \
