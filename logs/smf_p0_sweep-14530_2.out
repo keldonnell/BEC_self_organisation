@@ -1,0 +1,12 @@
+/opt/local/miniconda_23_9/lib/python3.11/site-packages/conda/base/context.py:201: FutureWarning: Adding 'defaults' to channel list implicitly is deprecated and will be removed in 25.3. 
+
+To remove this warning, please choose a default channel explicitly with conda's regular configuration system, e.g. by adding 'defaults' to the list of channels:
+
+  conda config --add channels defaults
+
+For more information see https://docs.conda.io/projects/conda/en/stable/user-guide/configuration/use-condarc.html
+
+  deprecated.topic(
+JOB 14533 ARRAY_ID 2  -> i=2 ; range=[2.00001e-10, 2.0013e-10] ; intervals=3 (frames=4)
+Analytic t0 extension enabled (--extend-time-using-t0).
+slurmstepd: error: *** JOB 14533 ON ribbo10 CANCELLED AT 2025-11-17T15:36:02 ***

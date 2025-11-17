@@ -12,7 +12,7 @@ import numpy as np
 from analytic_predictors import analytic_delay_time, pump_threshold
 
 MAX_ANALYTIC_TIME = 1e11
-TIME_EXTENSION_FACTOR = 2.5 
+TIME_EXTENSION_FACTOR = 3.0
 
 parser = argparse.ArgumentParser(description="")
 
