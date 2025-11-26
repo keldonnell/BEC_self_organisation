@@ -12,7 +12,7 @@ def compute_metrics(amplitudes, num_points=2000):
     diff = []
 
     for A in amplitudes:
-        s = A * (np.sin(x) + 1.0)
+        s = A * (np.sin(x)) + 1.0
         m_sqrt = np.mean(np.sqrt(s))
         m = np.mean(s)
         mean_sqrt.append(m_sqrt)
