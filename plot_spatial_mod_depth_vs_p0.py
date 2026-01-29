@@ -9,6 +9,14 @@ import numpy as np
 import fourier_utils as ft_utils
 import standard_data_utils as stand_utils
 
+PUBLICATION_FONTS = {
+    "font.size": 14,
+    "axes.titlesize": 18,
+    "axes.labelsize": 16,
+    "xtick.labelsize": 14,
+    "ytick.labelsize": 14,
+    "legend.fontsize": 14,
+}
 
 def parse_arguments():
     """Parse command-line arguments."""
@@ -107,8 +115,8 @@ def create_plot(p0_vals, mod_depth_vals, ft_amp_vals, x, p0_samples, m_max_vals,
         color="black",
         edgecolor="black",
         marker="x",
-        linewidth=0.6,
-        s=30,
+        linewidth=1.2,
+        s=70,
         label="Simulation",
         zorder=3,
     )
@@ -119,8 +127,8 @@ def create_plot(p0_vals, mod_depth_vals, ft_amp_vals, x, p0_samples, m_max_vals,
             ft_amp_vals,
             color="tab:blue",
             marker="o",
-            markersize=4,
-            linewidth=1,
+            markersize=6,
+            linewidth=1.5,
             label="FFT first harmonic",
             zorder=4,
         )
@@ -130,21 +138,21 @@ def create_plot(p0_vals, mod_depth_vals, ft_amp_vals, x, p0_samples, m_max_vals,
             p0_samples,
             m_max_vals,
             color="black",
-            linewidth=1,
+            linewidth=1.5,
             label=r"$M_{max}$ analytic",
             zorder=5,
         )
 
     ax.axvline(p_th, color="k", linestyle="--", linewidth=1.2, label=r"$p_{th}$", zorder=2)
 
-    ax.set_xlabel(r"Pump strength $p_0$", fontsize=13)
-    ax.set_ylabel(r"M", fontsize=13)
-    ax.set_title(rf"Magnetization", fontsize=14)
+    ax.set_xlabel(r"Pump strength $p_0$", fontsize=16)
+    ax.set_ylabel(r"M", fontsize=16)
+    ax.set_title(rf"$M_{{max}}$ at $x = {x}$", fontsize=18)
     ax.minorticks_on()
-    ax.tick_params(axis="both", which="both", direction="in", top=True, right=True)
+    ax.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=14)
     ax.grid(which="major", linestyle=":", alpha=0.4)
     ax.grid(which="minor", linestyle=":", alpha=0.15)
-    ax.legend(frameon=False, loc="lower right")
+    ax.legend(frameon=False, loc="lower right", fontsize=14)
 
     if p0_vals.size:
         ax.set_xlim(p0_vals.min() * 0.98, p0_vals.max() * 1.02)
@@ -157,6 +165,7 @@ def create_plot(p0_vals, mod_depth_vals, ft_amp_vals, x, p0_samples, m_max_vals,
 def main():
     """Main entry point."""
     plt.rcParams["ps.usedistiller"] = "xpdf"
+    plt.rcParams.update(PUBLICATION_FONTS)
 
     args = parse_arguments()
 

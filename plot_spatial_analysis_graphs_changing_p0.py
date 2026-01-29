@@ -7,6 +7,14 @@ import re
 from scipy import stats
 import standard_data_utils as stand_utils
 
+PUBLICATION_FONTS = {
+    "font.size": 14,
+    "axes.titlesize": 18,
+    "axes.labelsize": 16,
+    "xtick.labelsize": 14,
+    "ytick.labelsize": 14,
+    "legend.fontsize": 14,
+}
 def parse_arguments():
     """
     Parse command-line arguments.
@@ -100,13 +108,9 @@ def calculate_values(sorted_files, nodes, p_th, x_vals, Delta, R, b0, gambar):
     span_vals = stand_utils.calc_span(sorted_files_above_th, nodes, False)
     legett_vals = stand_utils.calc_legett_chng_p0(sorted_files_above_th, x_vals, nodes)
     
-    # Calculate oscillation omega values
-    decay_rate = 3.77e4
-    oscill_omega_vals = stand_utils.calc_oscill_omega_vals(sorted_files_above_th, p0_above_th_vals, x_vals, nodes, Delta, R, b0, gambar, decay_rate)
+    return p0_shift_vals, sd_vals, mod_depth_vals, span_vals, legett_vals, p0_above_th_vals
 
-    return p0_shift_vals, sd_vals, mod_depth_vals, span_vals, legett_vals, oscill_omega_vals, p0_above_th_vals
-
-def create_plots(fig, ax, p0_shift_vals, sd_vals, mod_depth_vals, span_vals, legett_vals, oscill_omega_vals, p0_above_th_vals, plot_data):
+def create_plots(fig, ax, p0_shift_vals, sd_vals, mod_depth_vals, span_vals, legett_vals, plot_data):
     """
     Create initial plots for various calculated values.
     
@@ -125,21 +129,17 @@ def create_plots(fig, ax, p0_shift_vals, sd_vals, mod_depth_vals, span_vals, leg
     Returns:
         None
     """
-    fig.subplots_adjust(wspace=0.55, hspace=0.3)
+    fig.subplots_adjust(wspace=0.5, hspace=0.4)
 
     # Create scatter plots for the first row
     for ax_plot, title, ylabel, data in plot_data:
-        ax_plot.set_title(title)
-        ax_plot.set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=14)
-        ax_plot.set_ylabel(ylabel, fontsize=14)
-        ax_plot.scatter(p0_shift_vals, data)
+        ax_plot.set_title(title, fontsize=18, wrap=True)
+        ax_plot.set_xlabel(r"$\frac{p_0 - p_{th}}{p_{th}}$", fontsize=16)
+        ax_plot.set_ylabel(ylabel, fontsize=16)
+        ax_plot.scatter(p0_shift_vals, data, s=60, color="black", edgecolors="none")
+        ax_plot.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=14)
+        ax_plot.grid(which="major", linestyle=":", alpha=0.4)
 
-    # Create scatter plot for oscillation omega values
-    ax[0, 4].set_title(r"$\omega$")
-    ax[0, 4].set_xlabel(r"$p_0$", fontsize=14)
-    ax[0, 4].set_ylabel(r"$\omega$", fontsize=14)
-    ax[0, 4].scatter(p0_above_th_vals, oscill_omega_vals)
-    
 def fit_and_plot(ax, x_vals, y_vals, xlabel, ylabel, title, final_fit_index):
     """
     Perform logarithmic regression and plot the results.
@@ -158,25 +158,26 @@ def fit_and_plot(ax, x_vals, y_vals, xlabel, ylabel, title, final_fit_index):
     print(f"{title}: exponent = {exponent} +- {conf_interval}, coefficient = {coefficient}, r-squared = {r_srd}")
 
     # Plot scatter of original data
-    ax.scatter(x_vals, y_vals, label='Data')
+    ax.scatter(x_vals, y_vals, label='Data', s=60, color="black", edgecolors="none")
 
     # Generate smooth curve for the fit
     x_smooth = np.linspace(x_vals.min(), x_vals.max(), len(x_vals))[:final_fit_index]
     y_smooth = coefficient * x_smooth**exponent
 
     # Plot the fitted curve
-    ax.plot(x_smooth, y_smooth, 'r', label='Fitted Curve')
+    ax.plot(x_smooth, y_smooth, 'r', label='Fitted Curve', linewidth=1.6)
     
     # Set log scale for both axes
     ax.set_xscale('log')
     ax.set_yscale('log')
     
     # Set labels and title
-    ax.set_xlabel(xlabel)
-    ax.set_ylabel(ylabel)
-    ax.set_title(f'Logarithmic Regression of {title}\n(Fit: y = {coefficient:.2e} * x^{exponent:.2f})', fontsize=8)
+    ax.set_xlabel(xlabel, fontsize=16)
+    ax.set_ylabel(ylabel, fontsize=16)
+    ax.set_title(f'Logarithmic Regression of {title}\n(Fit: y = {coefficient:.2e} * x^{exponent:.2f})', fontsize=14)
+    ax.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=14)
     
-    ax.legend()
+    ax.legend(fontsize=14)
     ax.grid(True)
 
 def main():
@@ -185,6 +186,7 @@ def main():
     """
     # Set matplotlib parameters
     plt.rcParams["ps.usedistiller"] = "xpdf"
+    plt.rcParams.update(PUBLICATION_FONTS)
     
     # Parse command-line arguments
     args = parse_arguments()
@@ -207,30 +209,29 @@ def main():
     x_vals = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
 
     # Calculate various values
-    p0_shift_vals, sd_vals, mod_depth_vals, span_vals, legett_vals, oscill_omega_vals, p0_above_th_vals = calculate_values(
+    p0_shift_vals, sd_vals, mod_depth_vals, span_vals, legett_vals, _p0_above_th_vals = calculate_values(
         sorted_files, nodes, p_th, x_vals, Delta, R, b0, gambar
     )
 
-    # Create figure and axes
-    fig, ax = plt.subplots(2, 5, figsize=(24, 14))
+    # Create figure and axes (removed omega panels, so 2x4 grid)
+    fig, ax = plt.subplots(2, 4, figsize=(22, 14))
 
     # Define plot data for the first row of subplots
     plot_data = [
-        (ax[0, 0], r"Spatial standard deviation of $|\psi|^2$", r"$\sigma[|\psi|^2]$", sd_vals),
-        (ax[0, 1], r"Spatial modulation depth of $|\psi|^2$", r"Modulation depth m$[|\psi|^2]$", mod_depth_vals),
-        (ax[0, 2], r"Spatial span of $|\psi|^2$", r"Span $[|\psi|^2]$", span_vals),
+        (ax[0, 0], r"Std. dev. of $|\psi|^2$", r"$\sigma[|\psi|^2]$", sd_vals),
+        (ax[0, 1], r"Modulation depth of $|\psi|^2$", r"Modulation depth m$[|\psi|^2]$", mod_depth_vals),
+        (ax[0, 2], r"Span of $|\psi|^2$", r"Span $[|\psi|^2]$", span_vals),
         (ax[0, 3], r"Legett criteria $Q_0$", r"$Q_0$", legett_vals),
     ]
 
     # Create initial plots
-    create_plots(fig, ax, p0_shift_vals, sd_vals, mod_depth_vals, span_vals, legett_vals, oscill_omega_vals, p0_above_th_vals, plot_data)
+    create_plots(fig, ax, p0_shift_vals, sd_vals, mod_depth_vals, span_vals, legett_vals, plot_data)
 
     # Define data for logarithmic regression plots
     fit_data = [
-        (ax[1, 0], p0_shift_vals, sd_vals, r'$\frac{p_0 - p_{th}}{p_{th}}$', r'$\sigma[|\psi^2|]$', 'Standard Deviation', 10),
-        (ax[1, 1], p0_shift_vals, mod_depth_vals, r'$\frac{p_0 - p_{th}}{p_{th}}$', r'Modulation Depth $m[|\psi^2|]$', 'Modulation Depth', 7),
+        (ax[1, 0], p0_shift_vals, sd_vals, r'$\frac{p_0 - p_{th}}{p_{th}}$', r'$\sigma[|\psi^2|]$', 'Std. dev.', 10),
+        (ax[1, 1], p0_shift_vals, mod_depth_vals, r'$\frac{p_0 - p_{th}}{p_{th}}$', r'Modulation Depth $m[|\psi^2|]$', 'Mod Depth', 7),
         (ax[1, 2], p0_shift_vals, span_vals, r'$\frac{p_0 - p_{th}}{p_{th}}$', r'Span$[|\psi^2|]$', 'Span', 10),
-        (ax[1, 4], p0_shift_vals, oscill_omega_vals, r'$\frac{p_0 - p_{th}}{p_{th}}$', r'$\omega$', 'Omega', 10),
     ]
 
     # Perform logarithmic regression and plot results

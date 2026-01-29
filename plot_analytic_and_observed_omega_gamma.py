@@ -12,6 +12,14 @@ import fourier_utils as ft_utils
 import standard_data_utils as stand_utils
 
 FLOAT_PATTERN = re.compile(r"(\d+(?:\.\d+)?e[-+]\d+)", re.IGNORECASE)
+PUBLICATION_FONTS = {
+    "font.size": 14,
+    "axes.titlesize": 18,
+    "axes.labelsize": 16,
+    "xtick.labelsize": 14,
+    "ytick.labelsize": 14,
+    "legend.fontsize": 14,
+}
 
 
 def non_negative_int(value):
@@ -48,6 +56,16 @@ def parse_arguments():
             " sorted S-file list (0-based)."
         ),
     )
+    parser.add_argument(
+        "--s-avg-index",
+        metavar="index",
+        type=non_negative_int,
+        default=None,
+        help=(
+            "If provided, plots the time-averaged S(x) profile versus x for the given index in the sorted"
+            " S-file list (0-based)."
+        ),
+    )
     return parser.parse_args()
 
 
@@ -56,6 +74,7 @@ def read_seed_metadata(seed_path):
     return {
         "nodes": int(data[0]),
         "omega_r": data[6],
+        "Delta": data[5],
         "gamma_bar": data[6],
         "b0": data[7],
         "num_crit": data[8],
@@ -133,11 +152,11 @@ def plot_results(
     omega_vals,
     observed_p0,
     observed_omega,
-    folder_name,
     alt_curve_avg=None,
+    delta_curve=None,
 ):
-    fig, ax = plt.subplots(figsize=(7, 4))
-    ax.plot(p0_vals, omega_vals, marker="o", linewidth=1.2, label="Analytic")
+    fig, ax = plt.subplots(figsize=(9, 6))
+    ax.plot(p0_vals, omega_vals, marker="o", markersize=7, linewidth=1.8, label="Analytic")
 
     if observed_p0.size:
         ax.plot(
@@ -145,27 +164,40 @@ def plot_results(
             observed_omega,
             marker="x",
             linestyle="--",
-            linewidth=1.2,
+            markersize=8,
+            linewidth=1.8,
             label="Observed",
         )
     else:
         print("No observed omega/Gamma values passed to plotting routine.")
 
-    if alt_curve_avg is not None and alt_curve_avg[0].size:
+    # if alt_curve_avg is not None and alt_curve_avg[0].size:
+    #     ax.plot(
+    #         alt_curve_avg[0],
+    #         alt_curve_avg[1],
+    #         marker="d",
+    #         linestyle="-",
+    #         linewidth=1.2,
+    #         label=r"$|<S(x, t)>_{t_0 -> T}|_{q_c}$",
+    #     )
+
+    if delta_curve is not None and delta_curve[0].size:
         ax.plot(
-            alt_curve_avg[0],
-            alt_curve_avg[1],
-            marker="d",
-            linestyle="-",
-            linewidth=1.2,
-            label=r"$|<S(x, t)>_{t_0 -> T}|_{q_c}$",
+            delta_curve[0],
+            delta_curve[1],
+            marker="s",
+            linestyle="-.",
+            markersize=6,
+            linewidth=1.8,
+            label=r"$\sqrt{\frac{\omega_r}{\Gamma}\Delta |S_{q_c}|}$",
         )
 
-    ax.set_xlabel(r"$p_0$")
-    ax.set_ylabel(r"$\omega / \Gamma$")
-    ax.set_title(rf"Analytic vs observed $\omega / \Gamma$ for {folder_name}")
+    ax.set_xlabel(r"$p_0$", fontsize=16)
+    ax.set_ylabel(r"$\omega / \Gamma$", fontsize=16)
+    ax.set_title(r"Analytic vs observed $\omega / \Gamma$", fontsize=18)
+    ax.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=14)
     ax.grid(True, linestyle=":", alpha=0.5)
-    ax.legend()
+    ax.legend(loc="best", frameon=False, fontsize=14)
     fig.tight_layout()
     plt.show()
     return fig, ax
@@ -184,7 +216,7 @@ def compute_first_fourier_amplitude(spatial_profile, num_crit):
     L = 2 * np.pi * num_crit if num_crit > 0 else float(N)
     dx = L / max(N, 1)
 
-    fft_vals = np.fft.fft(profile)
+    fft_vals = np.fft.fft(profile, norm="forward")
     k_vals = np.fft.fftfreq(N, d=dx) * 2 * np.pi
     target_k = 1.0
     idx = np.argmin(np.abs(k_vals - target_k))
@@ -264,6 +296,28 @@ def plot_sqrt_average_diagnostics(mean_profile, sqrt_of_mean, mean_of_sqrt, num_
     plt.show()
 
 
+def plot_time_averaged_profile(time_avg_profile, num_crit, p0, idx):
+    """
+    Plot the intermediate time-averaged S(x, t) profile used for FFT-based diagnostics.
+    """
+    profile = np.asarray(time_avg_profile, dtype=float)
+    if profile.ndim != 1 or profile.size == 0:
+        return
+
+    N = profile.size
+    L = 2 * np.pi * num_crit if num_crit > 0 else float(N)
+    x_coords = np.linspace(-L / 2, L / 2, N, endpoint=False)
+
+    plt.figure(figsize=(7, 3.5))
+    plt.plot(x_coords, profile, linewidth=1.2)
+    plt.title(f"Time-averaged S(x) for p0={p0:.3e} (index {idx})")
+    plt.xlabel("x")
+    plt.ylabel(r"$\langle S(x, t) \rangle_t$")
+    plt.grid(True, linestyle=":", alpha=0.5)
+    plt.tight_layout()
+    plt.show()
+
+
 def compute_observed_omega_gamma(psi_files, params, x_index):
     p0_vals = stand_utils.find_p0_vals_from_filenames(psi_files)
     observed_p0 = []
@@ -306,7 +360,7 @@ def compute_observed_omega_gamma(psi_files, params, x_index):
     return np.array(observed_p0), np.array(observed_omega)
 
 
-def compute_s_potential_statistics(s_files, params, diag_index=None):
+def compute_s_potential_statistics(s_files, params, diag_index=None, avg_profile_index=None):
     p0_vals = stand_utils.find_p0_vals_from_filenames(s_files)
     if p0_vals.size == 0:
         raise ValueError("Unable to extract p0 values from s filenames.")
@@ -323,6 +377,7 @@ def compute_s_potential_statistics(s_files, params, diag_index=None):
     fft_amp_vals = []
 
     diag_plotted = False
+    avg_profile_plotted = False
 
     for idx, (s_path, p0, t0) in enumerate(zip(s_files, p0_vals, t0_vals)):
         if not np.isfinite(t0):
@@ -346,6 +401,10 @@ def compute_s_potential_statistics(s_files, params, diag_index=None):
             continue
 
         time_avg_profile = np.mean(s_values, axis=0)
+        if avg_profile_index is not None and idx == avg_profile_index:
+            plot_time_averaged_profile(time_avg_profile, num_crit, p0, idx)
+            avg_profile_plotted = True
+
         if diag_index is not None and idx == diag_index:
             sqrt_of_mean_profile = np.sqrt(np.abs(time_avg_profile))
             mean_of_sqrt_profile = np.mean(np.sqrt(np.abs(s_values)), axis=0)
@@ -361,12 +420,16 @@ def compute_s_potential_statistics(s_files, params, diag_index=None):
 
     if diag_index is not None and not diag_plotted:
         print(f"Diagnostic index {diag_index} was not plotted (out of range or filtered).")
+    if avg_profile_index is not None and not avg_profile_plotted:
+        print(f"Average-profile index {avg_profile_index} was not plotted (out of range or filtered).")
 
     return np.array(valid_p0), np.array(fft_amp_vals)
 
 
 def main():
     args = parse_arguments()
+    plt.rcParams["ps.usedistiller"] = "xpdf"
+    plt.rcParams.update(PUBLICATION_FONTS)
 
     output_dir = os.path.join("patt1d_outputs", args.filename)
     input_dir = os.path.join("patt1d_inputs", args.filename)
@@ -382,12 +445,23 @@ def main():
         fft_amp_vals = np.array([])
     else:
         s_p0_vals, fft_amp_vals = compute_s_potential_statistics(
-            s_files, params, diag_index=args.s_diagnostic_index
+            s_files,
+            params,
+            diag_index=args.s_diagnostic_index,
+            avg_profile_index=args.s_avg_index,
         )
 
     alt_curve_avg = (
         compute_analytic_curve_from_amplitude(s_p0_vals, fft_amp_vals, params) if s_p0_vals.size else None
     )
+    delta_curve = None
+    if s_p0_vals.size:
+        omega_ratio = params.get("omega_r", np.nan)
+        delta_param = params.get("Delta", np.nan)
+        combined = omega_ratio * delta_param * fft_amp_vals
+        mask = np.isfinite(s_p0_vals) & np.isfinite(combined) & (combined >= 0)
+        if np.any(mask):
+            delta_curve = (s_p0_vals[mask], np.sqrt(combined[mask]))
 
     x_index = compute_x_index(float(args.xpos), params["nodes"], params["num_crit"])
 
@@ -399,8 +473,8 @@ def main():
         omega_vals,
         observed_p0,
         observed_omega,
-        args.filename,
         alt_curve_avg=alt_curve_avg,
+        delta_curve=delta_curve,
     )
 
 
