@@ -1,129 +1,126 @@
-# Plots output from code PATT1D_Q_SFM_FFT_S
-# Plots intensities and phases of Optical field and BEC wavefunction.
-# Generates sequence of .png files
-
-# -*- coding: utf-8 -*-
-import matplotlib.pyplot as plt
-import numpy as np
-import os
 import argparse
+import glob
+import os
 
-# fname = raw_input("Enter filename: ")
-plt.rcParams["ps.usedistiller"] = (
-    "xpdf"  # improves quality of .eps figures for use with LaTeX
-)
+import matplotlib
+import numpy as np
 
-parser = argparse.ArgumentParser(description="")
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt
 
-parser.add_argument(
-    "-f",
-    "--filename",
-    metavar="filename",
-    required=True,
-    help="The name of the file to save to",
-)
-
-args = parser.parse_args()
+plt.rcParams["ps.usedistiller"] = "xpdf"
 
 
-output_dir = "patt1d_outputs/" + args.filename + "/"
-input_dir = "patt1d_inputs/" + args.filename + "/"
-frames_dir = output_dir + "frames/"
-s_dir = output_dir + "s.out"
-psi_dir = output_dir + "psi.out"
-seed_dir = input_dir + "seed.in"
+def parse_args():
+    parser = argparse.ArgumentParser(
+        description="Plot a single snapshot of s and |Psi|^2 at a given time index."
+    )
+    parser.add_argument(
+        "-f",
+        "--filename",
+        metavar="filename",
+        required=True,
+        help="Simulation folder name under patt1d_outputs/ and patt1d_inputs/",
+    )
+    parser.add_argument(
+        "-i",
+        "--index",
+        type=int,
+        required=True,
+        help=(
+            "If output uses sN_*/psiN_* files: N file index to load. "
+            "If output uses s.out/psi.out: time-row index to plot."
+        ),
+    )
+    parser.add_argument(
+        "-t",
+        "--time-index",
+        type=int,
+        default=-1,
+        help=(
+            "Time-row index inside the selected file (used with sN_*/psiN_* layout). "
+            "Default -1 (last row)."
+        ),
+    )
+    return parser.parse_args()
 
-print("Loading " + s_dir)
-data1 = np.loadtxt(s_dir)  # load dataset in the form t, intensity
-print("Loading " + psi_dir)
-data2 = np.loadtxt(psi_dir)  # load dataset in the form t, |Psi|^2
 
-
-if os.path.exists(frames_dir):
-    raise Exception("The filename already exists")
-else:  # Create folder if it does not aleady exist
-    os.makedirs(frames_dir)
-
-
-# Read input data from file
-def readinput():
-    data0 = np.genfromtxt(seed_dir, skip_footer=1, comments="!")  # load input data file
-
-    nodes = data0[0].astype(int)
-    maxt = data0[1]
-    ht = data0[2]
-    width_psi = data0[3]
-    p0 = data0[4]
-    Delta = data0[5]
-    gambar = data0[6]
-    b0 = data0[7]
+def read_input(seed_dir):
+    data0 = np.genfromtxt(seed_dir, skip_footer=1, comments="!")
+    nodes = int(data0[0])
     num_crit = data0[8]
-    R = data0[9]
-    gbar = data0[10]
-    v0 = data0[11]
-    plotnum = data0[12].astype(int)
+    return nodes, num_crit
 
-    return (
-        nodes,
-        maxt,
-        ht,
-        width_psi,
-        p0,
-        Delta,
-        gambar,
-        b0,
-        num_crit,
-        R,
-        gbar,
-        v0,
-        plotnum,
+
+def resolve_data_paths(output_dir, index):
+    s_out = os.path.join(output_dir, "s.out")
+    psi_out = os.path.join(output_dir, "psi.out")
+    if os.path.exists(s_out) and os.path.exists(psi_out):
+        return "single", s_out, psi_out
+
+    s_matches = glob.glob(os.path.join(output_dir, f"s{index}_*"))
+    psi_matches = glob.glob(os.path.join(output_dir, f"psi{index}_*"))
+    if len(s_matches) == 1 and len(psi_matches) == 1:
+        return "indexed", s_matches[0], psi_matches[0]
+
+    raise FileNotFoundError(
+        f"Could not find s.out/psi.out or matching s{index}_*/psi{index}_* in {output_dir}"
     )
 
 
-# Nx=np.sqrt(np.size(data1,axis=1)-1).astype(int)                              #No. of points in each row for field and BEC
+def main():
+    args = parse_args()
 
-# print 'Nx =',Nx
-# print 'Size of data1 =',np.size(data1,axis=0),np.size(data1,axis=1)
-nodes, maxt, ht, width_psi, p0, Delta, gambar, b0, num_crit, R, gbar, v0, plotnum = (
-    readinput()
-)
-t = data1[:, 0]
-plotnum = len(t)
-s = data1[:, 1:]
-prob = data2[:, 1:]
+    output_dir = f"patt1d_outputs/{args.filename}/"
+    input_dir = f"patt1d_inputs/{args.filename}/"
+    mode, s_path, psi_path = resolve_data_paths(output_dir, args.index)
+    seed_path = input_dir + "seed.in"
 
-# plt.ion()
-plt.ioff()
+    print("Loading " + s_path)
+    s_data = np.loadtxt(s_path)
+    print("Loading " + psi_path)
+    psi_data = np.loadtxt(psi_path)
 
-pi = np.pi
-xco = np.linspace(-pi * num_crit, pi * num_crit, nodes)
+    nodes, num_crit = read_input(seed_path)
+    t = s_data[:, 0]
+    s = s_data[:, 1:]
+    prob = psi_data[:, 1:]
 
-fig = plt.figure()
-step = 1
-count = 0
-for j in np.arange(0, plotnum - 1, step):
-    count = count + 1
-    print("Generating frame " + str(count))
+    if mode == "single":
+        t_idx = args.index
+    else:
+        t_idx = args.time_index
 
-    fig.suptitle(r"$\Gamma_2$ t=" + str("%.2e" % t[j]), fontsize=12)
+    if t_idx < 0:
+        t_idx = len(t) + t_idx
+    if t_idx < 0 or t_idx >= len(t):
+        raise IndexError(f"Time index {t_idx} out of range. Valid range is 0 to {len(t) - 1}.")
+
+    xco = np.linspace(-np.pi * num_crit, np.pi * num_crit, nodes)
+
+    fig = plt.figure(figsize=(8, 6))
+    fig.suptitle(r"$\Gamma_2$ t=" + str("%.2e" % t[t_idx]), fontsize=12)
 
     ax1 = plt.subplot(211)
-    f1 = ax1.plot(xco, s[j, :])
+    ax1.plot(xco, s[t_idx, :])
     ax1.set_xlabel(r"$q_c x$", fontsize=16)
     ax1.set_ylabel("Light intensity (s)", fontsize=16)
 
     ax2 = plt.subplot(212)
-    f2 = ax2.plot(xco, prob[j, :])
+    ax2.plot(xco, prob[t_idx, :])
     ax2.set_xlabel(r"$q_c x$", fontsize=16)
     ax2.set_ylabel(r"BEC ($|\Psi|^2)$", fontsize=16)
 
-    #    plt.tight_layout()
+    plt.tight_layout()
 
-    plt.draw()
-    #    plt.show()
-    #    time.sleep(0.02)
-    filename = frames_dir + str("%03d" % count) + ".png"
-    fig.savefig(filename, dpi=200)
-    plt.clf()
+    if mode == "single":
+        image_path = os.path.join(output_dir, f"snapshot_t{t_idx:04d}.png")
+    else:
+        image_path = os.path.join(output_dir, f"snapshot_i{args.index:04d}_t{t_idx:04d}.png")
+    fig.savefig(image_path, dpi=200)
+    plt.close(fig)
+    print(f"Saved snapshot: {image_path}")
 
-# plt.ioff()
+
+if __name__ == "__main__":
+    main()

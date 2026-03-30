@@ -13,6 +13,7 @@ const MIN_PEAK_HEIGHT = 1e-8
 function parse_args()
     filename = nothing
     xpos = nothing
+    csv_path = nothing
 
     i = 1
     while i <= length(ARGS)
@@ -23,8 +24,17 @@ function parse_args()
         elseif arg == "-x" || arg == "--xpos"
             i += 1
             xpos = parse(Float64, ARGS[i])
+        elseif arg == "--csv"
+            if i < length(ARGS) && !startswith(ARGS[i + 1], "-")
+                i += 1
+                csv_path = ARGS[i]
+            else
+                csv_path = "spatial_mod_depth_vs_p0.csv"
+            end
         elseif arg == "-h" || arg == "--help"
-            println("Usage: julia plot_spatial_mod_depth_vs_p0.jl -f <input_dir_name> -x <x_position>")
+            println(
+                "Usage: julia plot_spatial_mod_depth_vs_p0.jl -f <input_dir_name> -x <x_position> [--csv [csv_path]]"
+            )
             exit(0)
         else
             error("Unknown argument: $arg")
@@ -36,7 +46,7 @@ function parse_args()
         error("Missing required arguments. Use -f <input_dir_name> and -x <x_position>.")
     end
 
-    return filename, xpos
+    return filename, xpos, csv_path
 end
 
 function read_input(seed_path)
@@ -320,28 +330,28 @@ end
 function create_plot(p0_vals, mod_depth_vals, ft_amp_vals, p0_samples, m_max_vals, p_th)
     fig, ax = subplots()
 
-    ax.plot(
-        p0_vals,
-        mod_depth_vals,
-        color="tab:red",
-        marker="x",
-        linewidth=1,
-        markersize=5,
-        alpha=0.8,
-        label="Modulation depth",
-        zorder=3,
-    )
+    # ax.plot(
+    #     p0_vals,
+    #     mod_depth_vals,
+    #     color="tab:red",
+    #     marker="x",
+    #     linewidth=1,
+    #     markersize=5,
+    #     alpha=0.8,
+    #     #label="Modulation depth",
+    #     zorder=3,
+    # )
 
     if !isempty(ft_amp_vals)
         ax.plot(
             p0_vals,
             ft_amp_vals,
-            color="tab:blue",
-            marker=".",
+            color="tab:red",
+            marker="x",
             markersize=4,
             linewidth=1,
             alpha=0.8,
-            label="First harmonic amplitude",
+            #label="First harmonic amplitude",
             zorder=4,
         )
     end
@@ -352,16 +362,20 @@ function create_plot(p0_vals, mod_depth_vals, ft_amp_vals, p0_samples, m_max_val
             m_max_vals,
             color="black",
             linewidth=1,
-            label="Analytic \$M(t = t_0)\$",
+            #label="Analytic \$n_{q_c}(t = \bar{t_0})\$",
             zorder=5,
         )
     end
 
-    ax.axvline(p_th, color="k", linestyle="--", linewidth=1.2, label="\$p_{th}\$", zorder=2)
+    ax.axvline(p_th, color="k", linestyle="--", linewidth=1.2,
+    #label="\$p_{th}\$",
+    zorder=2)
 
-    ax.set_xlabel("Pump strength \$p_0\$", fontsize=18)
-    ax.set_ylabel("\$M_{max}\$", fontsize=18)
+    ax.set_xlabel("\$p_0\$", fontsize=18)
+    ax.set_ylabel(raw"$|n_{q_c}|_{\mathrm{max}}$", fontsize=18)
     ax.legend(frameon=false, loc="lower right", fontsize=16)
+    # Force scientific notation with math text so ticks use ×10^n style.
+    ax.ticklabel_format(axis="X", style="sci", scilimits=(0, 0), useMathText=true)
 
     if !isempty(p0_vals)
         ax.set_xlim(minimum(p0_vals) * 0.98, maximum(p0_vals) * 1.02)
@@ -372,10 +386,24 @@ function create_plot(p0_vals, mod_depth_vals, ft_amp_vals, p0_samples, m_max_val
     return fig, ax
 end
 
+function export_plot_data_csv(csv_path, p0_vals, ft_amp_vals, p0_samples, m_max_vals)
+    n_rows = max(length(p0_vals), length(p0_samples))
+    open(csv_path, "w") do io
+        println(io, "p0_observed,first_harmonic_amp,p0_analytic,m_max_analytic")
+        for i in 1:n_rows
+            obs_p0 = i <= length(p0_vals) ? @sprintf("%.12e", p0_vals[i]) : ""
+            obs_amp = i <= length(ft_amp_vals) ? @sprintf("%.12e", ft_amp_vals[i]) : ""
+            ana_p0 = i <= length(p0_samples) ? @sprintf("%.12e", p0_samples[i]) : ""
+            ana_m = i <= length(m_max_vals) ? @sprintf("%.12e", m_max_vals[i]) : ""
+            println(io, "$(obs_p0),$(obs_amp),$(ana_p0),$(ana_m)")
+        end
+    end
+end
+
 function main()
     PyPlot.matplotlib["rcParams"]["ps.usedistiller"] = "xpdf"
 
-    filename, xpos = parse_args()
+    filename, xpos, csv_path = parse_args()
 
     output_dir = joinpath("patt1d_outputs", filename)
     input_dir = joinpath("patt1d_inputs", filename)
@@ -410,6 +438,9 @@ function main()
     end
 
     create_plot(p0_vals, mod_depth_vals, ft_amp_vals, collect(p0_samples), m_max_vals, p_th)
+    if csv_path !== nothing
+        export_plot_data_csv(csv_path, p0_vals, ft_amp_vals, collect(p0_samples), m_max_vals)
+    end
 
     savefig("spatial_mod_depth_vs_p0.pdf", dpi=300)
     savefig("spatial_mod_depth_vs_p0.png", dpi=300)

@@ -11,16 +11,6 @@ from analytic_predictors import analytic_delay_time, pump_threshold
 
 RELATIVE_HEIGHT_THRESHOLD = 1e-3
 MIN_PROMINENCE = 1e-6
-PUBLICATION_FONTS = {
-    "font.size": 14,
-    "axes.titlesize": 18,
-    "axes.labelsize": 16,
-    "xtick.labelsize": 14,
-    "ytick.labelsize": 14,
-    "legend.fontsize": 14,
-}
-
-
 def parse_arguments():
     parser = argparse.ArgumentParser(description="Plot modulation delay time t0 versus p0.")
     parser.add_argument(
@@ -105,46 +95,39 @@ def compute_delay_times(sorted_files, p0_vals, x_index):
 
     return np.array(valid_p0, dtype=float), np.array(delay_times, dtype=float)
 
-def create_plot(p0_vals, delay_times, p0_analytic_vals, t0_analytic_vals, p_th, x):
-
-    fig, ax = plt.subplots(figsize=(9, 6))
-
-
-    # Plotting the analtic function
+def create_plot(p0_vals, delay_times, p0_analytic_vals, t0_analytic_vals, p_th):
+    fig, ax = plt.subplots()
 
     ax.plot(
         p0_analytic_vals,
         t0_analytic_vals,
-        color="C0",
-        linewidth=1.8,
+        color="black",
+        linewidth=1,
         zorder=2,
-        label="Analytic $t_0$",
+        # label="Analytic $t_0$",
     )
-    ax.scatter(
+    ax.plot(
         p0_vals,
         delay_times,
-        color="black",
+        color="tab:red",
         marker="x",
-        s=60,
-        linewidths=1.1,
+        linestyle="None",
+        markersize=5,
+        linewidth=1,
+        alpha=0.8,
         zorder=3,
-        label=r"Observed $t_0$"
+        # label=r"Observed $t_0$",
     )
 
-    ax.axvline(p_th, color="k", linestyle="--", linewidth=1.2, label=r"$p_{th}$", zorder=1)
+    ax.axvline(p_th, color="k", linestyle="--", linewidth=1.2, zorder=1)
 
     ax.set_xlabel(r"Pump strength $p_0$", fontsize=18)
     ax.set_ylabel(r"Delay time $t_0$", fontsize=18)
-    ax.set_title(rf"Modulation delay time at $x = {x}$", fontsize=20)
-    ax.minorticks_on()
-    ax.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=16)
-    ax.grid(which="major", linestyle=":", alpha=0.4)
-    ax.grid(which="minor", linestyle=":", alpha=0.15)
-    ax.legend(frameon=False, loc="best", fontsize=16)
+    ax.legend(frameon=False, loc="lower right", fontsize=16)
 
-    # if p0_vals.size:
-        # ax.set_xlim(p0_vals.min() * 0.9, p0_vals.max() * 1.02)
-        # ax.set_ylim(bottom=0)
+    if p0_vals.size:
+        ax.set_xlim(p_th * 0.98, p0_vals.max() * 1.02)
+    ax.set_ylim(bottom=0)
 
     fig.tight_layout()
     return fig, ax
@@ -152,7 +135,6 @@ def create_plot(p0_vals, delay_times, p0_analytic_vals, t0_analytic_vals, p_th, 
 
 def main():
     plt.rcParams["ps.usedistiller"] = "xpdf"
-    plt.rcParams.update(PUBLICATION_FONTS)
 
     args = parse_arguments()
 
@@ -192,7 +174,9 @@ def main():
     t0_analytic_vals = analytic_delay_time(p0_analytic_vals, p_th, gamma_bar, seed)
     print(t0_analytic_vals)
 
-    create_plot(p0_vals, delay_times, p0_analytic_vals, t0_analytic_vals, p_th, x)
+    create_plot(p0_vals, delay_times, p0_analytic_vals, t0_analytic_vals, p_th)
+    plt.savefig("temporal_delay_vs_p0_at_x.pdf", dpi=300)
+    plt.savefig("temporal_delay_vs_p0_at_x.png", dpi=300)
     plt.show()
 
 

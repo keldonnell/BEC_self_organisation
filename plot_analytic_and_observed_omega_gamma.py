@@ -127,7 +127,27 @@ def extract_peak_profile(psi_path, nodes):
     return data[time_index, 1:]  # discard the time column
 
 
-def compute_analytic_omega_gamma(psi_files, params):
+def extract_max_nqc_amplitude(psi_path, num_crit):
+    """
+    Compute the maximum |n^{q_c}| across all time frames in a psi output file.
+    """
+    data = np.loadtxt(psi_path)
+    if data.ndim != 2 or data.shape[1] < 2:
+        raise ValueError(f"{psi_path} does not look like a psi output table.")
+
+    psi_values = data[:, 1:]
+    if psi_values.size == 0:
+        return np.nan
+
+    max_amp = -np.inf
+    for row in psi_values:
+        amp = ft_utils.calculate_nqc_amplitude(row, num_crit)
+        if amp > max_amp:
+            max_amp = amp
+    return max_amp if np.isfinite(max_amp) else np.nan
+
+
+def compute_max_nqc_omega_gamma(psi_files, params):
     p0_vals = stand_utils.find_p0_vals_from_filenames(psi_files)
     if p0_vals.size == 0:
         raise ValueError("Unable to extract p0 values from psi filenames.")
@@ -136,9 +156,8 @@ def compute_analytic_omega_gamma(psi_files, params):
     nqc_vals = []
 
     for file_path, p0 in zip(psi_files, p0_vals):
-        psi_snapshot = extract_peak_profile(file_path, params["nodes"])
-        n_qc = ft_utils.calculate_nqc_amplitude(psi_snapshot, params["num_crit"])
-        print(f'n_qc = {np.abs(n_qc)}')
+        n_qc = extract_max_nqc_amplitude(file_path, params["num_crit"])
+        print(f"n_qc (max over time) = {np.abs(n_qc)}")
         # Analytic omega/Gamma definition: sqrt(b0 * R * p0 * |n^{q_c}| * omega_r)
         omega_gamma = np.sqrt(params["b0"] * params["R"] * p0 * n_qc * params["omega_r"])
         nqc_vals.append(n_qc)
@@ -154,19 +173,39 @@ def plot_results(
     observed_omega,
     alt_curve_avg=None,
     delta_curve=None,
+    density_delta_curve=None,
+    mmax_curve=None,
 ):
-    fig, ax = plt.subplots(figsize=(9, 6))
-    ax.plot(p0_vals, omega_vals, marker="o", markersize=7, linewidth=1.8, label="Analytic")
+    fig, ax = plt.subplots()
+    if p0_vals.size > 1:
+        p0_dense = np.linspace(np.min(p0_vals), np.max(p0_vals), 500)
+        omega_dense = np.interp(p0_dense, p0_vals, omega_vals)
+        ax.plot(
+            p0_dense,
+            omega_dense,
+            color="black",
+            linewidth=1,
+            label=r"$\sqrt{b_0 R p_0 \max_t(|n|_{q_c}) (\omega_r / \Gamma)}$",
+        )
+    else:
+        ax.plot(
+            p0_vals,
+            omega_vals,
+            color="black",
+            linewidth=1,
+            label=r"$\sqrt{b_0 R p_0 \max_t(|n|_{q_c}) (\omega_r / \Gamma)}$",
+        )
 
     if observed_p0.size:
         ax.plot(
             observed_p0,
             observed_omega,
+            color="tab:red",
             marker="x",
-            linestyle="--",
-            markersize=8,
-            linewidth=1.8,
-            label="Observed",
+            linestyle="-",
+            markersize=5,
+            linewidth=1,
+            label="Numerically observed",
         )
     else:
         print("No observed omega/Gamma values passed to plotting routine.")
@@ -185,19 +224,39 @@ def plot_results(
         ax.plot(
             delta_curve[0],
             delta_curve[1],
-            marker="s",
-            linestyle="-.",
-            markersize=6,
-            linewidth=1.8,
-            label=r"$\sqrt{\frac{\omega_r}{\Gamma}\Delta |S_{q_c}|}$",
+            color="tab:blue",
+            marker=".",
+            linestyle="-",
+            markersize=4,
+            linewidth=1,
+            label=r"$\sqrt{(\omega_r/\Gamma)\,\Delta\,|\langle S \rangle_t|_{q_c}}$",
         )
 
-    ax.set_xlabel(r"$p_0$", fontsize=16)
-    ax.set_ylabel(r"$\omega / \Gamma$", fontsize=16)
-    ax.set_title(r"Analytic vs observed $\omega / \Gamma$", fontsize=18)
-    ax.tick_params(axis="both", which="both", direction="in", top=True, right=True, labelsize=14)
-    ax.grid(True, linestyle=":", alpha=0.5)
-    ax.legend(loc="best", frameon=False, fontsize=14)
+    if density_delta_curve is not None and density_delta_curve[0].size:
+        ax.plot(
+            density_delta_curve[0],
+            density_delta_curve[1],
+            color="#E68600",
+            marker="s",
+            linestyle="-",
+            markersize=4,
+            linewidth=1,
+            label=r"$\sqrt{b_0 R p_0 |\langle n \rangle_t|_{q_c} (\omega_r/\Gamma)}$",
+        )
+
+    if mmax_curve is not None and mmax_curve[0].size:
+        ax.plot(
+            mmax_curve[0],
+            mmax_curve[1],
+            color="tab:green",
+            linestyle="-",
+            linewidth=1.2,
+            label=r"$\sqrt{b_0 R p_0 M(t_0) (\omega_r/\Gamma)}$",
+        )
+
+    ax.set_xlabel(r"Pump strength $p_0$")
+    ax.set_ylabel(r"$\omega / \Gamma$")
+    ax.legend(loc="upper left", frameon=False)
     fig.tight_layout()
     plt.show()
     return fig, ax
@@ -240,7 +299,7 @@ def compute_analytic_curve_from_amplitude(p0_vals, amp_vals, params):
     amp_sel = amp_vals[mask]
     factor = params["b0"] * params["R"] * params["omega_r"]
     omega_vals = np.sqrt(factor * p0_sel) * amp_sel
-    omega_vals = amp_sel #REMOVE THIS LATER. THIS IS JUST TO TEST
+    #omega_vals = amp_sel #REMOVE THIS LATER. THIS IS JUST TO TEST
     return p0_sel, omega_vals
 
 
@@ -259,6 +318,42 @@ def _compute_fft_profile(profile, num_crit):
     k_vals = np.fft.fftfreq(N, d=dx) * 2 * np.pi
     pos_mask = k_vals >= 0
     return k_vals[pos_mask], np.abs(fft_vals[pos_mask])
+
+
+def compute_mmax_analytic_curve(p0_vals, params):
+    """
+    Compute the analytic M_max curve and map it through the omega/Gamma formula.
+    Uses the same M_max expression as plot_spatial_mod_depth_vs_p0.py.
+    """
+    p0_vals = np.asarray(p0_vals, dtype=float)
+    if p0_vals.size == 0:
+        return np.array([]), np.array([])
+
+    p0_min, p0_max = np.nanmin(p0_vals), np.nanmax(p0_vals)
+    if not np.isfinite(p0_min) or not np.isfinite(p0_max):
+        return np.array([]), np.array([])
+
+    if p0_min == p0_max:
+        p0_samples = np.array([p0_min])
+    else:
+        p0_samples = np.linspace(p0_min, p0_max, max(len(p0_vals), 500))
+
+    gamma_bar = params.get("gamma_bar", np.nan)
+    b0 = params.get("b0", np.nan)
+    reflectivity = params.get("R", np.nan)
+    omega_r = params.get("omega_r", np.nan)
+    if not np.isfinite(gamma_bar) or not np.isfinite(b0) or not np.isfinite(reflectivity):
+        return np.array([]), np.array([])
+
+    p_th = (2 * gamma_bar) / (b0 * reflectivity)
+    with np.errstate(divide="ignore", invalid="ignore"):
+        m_max_vals = np.sqrt(2 * p_th * np.maximum(p0_samples - p_th, 0) / (p0_samples**2))
+        m_max_vals = np.where(p0_samples > 0, m_max_vals, np.nan)
+
+    factor = b0 * reflectivity * omega_r
+    omega_vals = np.sqrt(factor * p0_samples * m_max_vals)
+    mask = np.isfinite(p0_samples) & np.isfinite(omega_vals)
+    return p0_samples[mask], omega_vals[mask]
 
 
 def plot_sqrt_average_diagnostics(mean_profile, sqrt_of_mean, mean_of_sqrt, num_crit, p0, diag_index):
@@ -426,10 +521,70 @@ def compute_s_potential_statistics(s_files, params, diag_index=None, avg_profile
     return np.array(valid_p0), np.array(fft_amp_vals)
 
 
+def compute_density_statistics(psi_files, params):
+    p0_vals = stand_utils.find_p0_vals_from_filenames(psi_files)
+    if p0_vals.size == 0:
+        raise ValueError("Unable to extract p0 values from psi filenames.")
+
+    gamma_bar = params["gamma_bar"]
+    b0 = params["b0"]
+    reflectivity = params["R"]
+    seed = params["seed"]
+    num_crit = params["num_crit"]
+    p_th = pump_threshold(gamma_bar, b0, reflectivity)
+    t0_vals = analytic_delay_time(p0_vals, p_th, gamma_bar, seed)
+
+    valid_p0 = []
+    fft_amp_vals = []
+
+    for psi_path, p0, t0 in zip(psi_files, p0_vals, t0_vals):
+        if not np.isfinite(t0):
+            print(f"Skipping p0={p0:.3e}: analytic t0 is not finite.")
+            continue
+
+        data = np.loadtxt(psi_path)
+        if data.ndim != 2 or data.shape[1] < 2:
+            print(f"Skipping p0={p0:.3e}: {os.path.basename(psi_path)} has invalid dimensions.")
+            continue
+
+        times = data[:, 0]
+        after_t0 = times >= t0
+        if not np.any(after_t0):
+            print(f"Skipping p0={p0:.3e}: no density samples beyond analytic t0={t0:.3e}.")
+            continue
+
+        psi_values = data[after_t0, 1:]
+        if psi_values.size == 0:
+            print(f"Skipping p0={p0:.3e}: no spatial data beyond t0.")
+            continue
+
+        density_values = np.abs(psi_values) ** 2
+        time_avg_profile = np.mean(density_values, axis=0)
+        amp = compute_first_fourier_amplitude(time_avg_profile, num_crit)
+        if not np.isfinite(amp):
+            print(f"Skipping p0={p0:.3e}: unable to compute density FFT amplitude after averaging.")
+            continue
+
+        valid_p0.append(p0)
+        fft_amp_vals.append(amp)
+
+    return np.array(valid_p0), np.array(fft_amp_vals)
+
 def main():
     args = parse_arguments()
     plt.rcParams["ps.usedistiller"] = "xpdf"
-    plt.rcParams.update(PUBLICATION_FONTS)
+    plt.rcParams.update(
+        {
+            "font.size": 18,
+            "axes.labelsize": 18,
+            "axes.titlesize": 18,
+            "xtick.labelsize": 16,
+            "ytick.labelsize": 16,
+            "legend.fontsize": 14,
+            "lines.linewidth": 1.2,
+            "lines.markersize": 4,
+        }
+    )
 
     output_dir = os.path.join("patt1d_outputs", args.filename)
     input_dir = os.path.join("patt1d_inputs", args.filename)
@@ -463,10 +618,26 @@ def main():
         if np.any(mask):
             delta_curve = (s_p0_vals[mask], np.sqrt(combined[mask]))
 
+    density_delta_curve = None
+    density_p0_vals, density_fft_amp_vals = compute_density_statistics(psi_files, params)
+    if density_p0_vals.size:
+        omega_ratio = params.get("omega_r", np.nan)
+        combined = (
+            params.get("b0", np.nan)
+            * params.get("R", np.nan)
+            * density_p0_vals
+            * density_fft_amp_vals
+            * omega_ratio
+        )
+        mask = np.isfinite(density_p0_vals) & np.isfinite(combined) & (combined >= 0)
+        if np.any(mask):
+            density_delta_curve = (density_p0_vals[mask], np.sqrt(combined[mask]))
+
     x_index = compute_x_index(float(args.xpos), params["nodes"], params["num_crit"])
 
-    p0_vals, omega_vals, _ = compute_analytic_omega_gamma(psi_files, params)
+    p0_vals, omega_vals, _ = compute_max_nqc_omega_gamma(psi_files, params)
     observed_p0, observed_omega = compute_observed_omega_gamma(psi_files, params, x_index)
+    mmax_curve = compute_mmax_analytic_curve(p0_vals, params)
 
     plot_results(
         p0_vals,
@@ -475,6 +646,8 @@ def main():
         observed_omega,
         alt_curve_avg=alt_curve_avg,
         delta_curve=delta_curve,
+        density_delta_curve=density_delta_curve,
+        mmax_curve=mmax_curve,
     )
 
 
