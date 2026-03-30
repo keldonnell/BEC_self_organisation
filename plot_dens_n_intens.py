@@ -2,7 +2,6 @@ import matplotlib.pyplot as plt
 import numpy as np
 import argparse
 import glob
-import standard_data_utils as stand_utils
 
 # Set matplotlib parameters for better quality output
 plt.rcParams["ps.usedistiller"] = (
@@ -53,34 +52,31 @@ def load_data(output_dir, frame_index):
 
 
 def plot_psi_s_heatmaps(psi_vals, s_vals, t_vals, num_crit):
-    """Plot heatmaps for PSI and S values."""
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 6))
+    """Plot density and intensity heatmaps over time."""
+    fig, ax = plt.subplots(1, 2, figsize=(12, 6))
     fig.subplots_adjust(wspace=0.3)
+    for axis in ax:
+        axis.set_box_aspect(1)
 
     extent = [-np.pi * num_crit, np.pi * num_crit, 0, t_vals.max()]
 
     # PSI heatmap
-    f1 = ax1.imshow(psi_vals, extent=extent, origin="lower", aspect="auto", cmap="hot")
-    fig.colorbar(f1, ax=ax1, orientation="horizontal")
-    ax1.set_xlabel(r"$q_c x$", fontsize=14)
-    ax1.set_ylabel(r"$\Gamma t$", fontsize=14)
-    ax1.set_title(r"BEC density $|\Psi|^2$", fontsize=14)
+    f1 = ax[0].imshow(
+        psi_vals, extent=extent, origin="lower", aspect="auto", cmap="hot"
+    )
+    fig.colorbar(f1, ax=ax[0], orientation="horizontal")
+    ax[0].set_xlabel(r"$q_c x$", fontsize=14)
+    ax[0].set_ylabel(r"$\Gamma t$", fontsize=14)
+    ax[0].set_title(r"BEC density $|\Psi|^2$", fontsize=14)
 
     # S heatmap
-    f2 = ax2.imshow(s_vals, extent=extent, origin="lower", aspect="auto", cmap="hot")
-    fig.colorbar(f2, ax=ax2, orientation="horizontal")
-    ax2.set_xlabel(r"$q_c x$", fontsize=14)
-    ax2.set_ylabel(r"$\Gamma t$", fontsize=14)
-    ax2.set_title("Intensity (s)", fontsize=14)
-
-
-def plot_temporal_cut(t_vals, psi_t_cut):
-    """Plot temporal cut along maximum starting at x = 0."""
-    fig, ax = plt.subplots(figsize=(6, 6))
-    ax.set_title(r"Temporal cut along maximum starting at x = 0")
-    ax.set_xlabel(r"$\Gamma t$", fontsize=14)
-    ax.set_ylabel(r"${|\psi|}^2$", fontsize=14)
-    ax.plot(t_vals, psi_t_cut)
+    f2 = ax[1].imshow(
+        s_vals, extent=extent, origin="lower", aspect="auto", cmap="hot"
+    )
+    fig.colorbar(f2, ax=ax[1], orientation="horizontal")
+    ax[1].set_xlabel(r"$q_c x$", fontsize=14)
+    ax[1].set_ylabel(r"$\Gamma t$", fontsize=14)
+    ax[1].set_title("Intensity (s)", fontsize=14)
 
 
 def main():
@@ -95,31 +91,14 @@ def main():
 
     # Read input parameters
     params = read_input(seed_dir)
-    (
-        nodes,
-        maxt,
-        ht,
-        width_psi,
-        p0,
-        Delta,
-        gambar,
-        b0,
-        num_crit,
-        R,
-        gbar,
-        v0,
-        plotnum,
-    ) = params
+    num_crit = params[8]
 
     # Extract data
     psi_vals = psi_data[:, 1:]
     s_vals = s_data[:, 1:]
     t_vals = psi_data[:, 0]
-    psi_t_cut = stand_utils.find_temporal_cut_of_x_peaks(psi_vals, 0)
-
     # Create plots
     plot_psi_s_heatmaps(psi_vals, s_vals, t_vals, num_crit)
-    plot_temporal_cut(t_vals, psi_t_cut)
 
     plt.show()
 

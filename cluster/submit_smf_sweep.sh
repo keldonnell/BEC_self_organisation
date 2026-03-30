@@ -11,6 +11,8 @@ shift 3
 DENSITY_CENTERS=""
 DENSITY_WIDTH=""
 DENSITY_STRENGTH=""
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 while [ "$#" -gt 0 ]; do
   case "$1" in
@@ -41,14 +43,14 @@ done
 export P0_START P0_END N_INTERVALS
 export DENSITY_CENTERS DENSITY_WIDTH DENSITY_STRENGTH
 
-cd /home/users/seb25178/Projects/BEC_SMF/BEC_self_organisation
+cd "${PROJECT_ROOT}"
 mkdir -p logs
 
 # If N_INTERVALS = M (number of intervals), indices should be 0..M (inclusive) => M+1 total values.
 ARRAY_SPEC="0-${N_INTERVALS}"
 
 sbatch \
-  --chdir=/home/users/seb25178/Projects/BEC_SMF/BEC_self_organisation \
+  --chdir="${PROJECT_ROOT}" \
   --export=ALL \
   --array="${ARRAY_SPEC}" \
-  run_smf_sweep.sbatch
+  "${SCRIPT_DIR}/run_smf_sweep.sbatch"

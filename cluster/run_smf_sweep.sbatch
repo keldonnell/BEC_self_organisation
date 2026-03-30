@@ -6,6 +6,8 @@
 #SBATCH --output=logs/%x-%A_%a.out
 
 set -euo pipefail
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+PROJECT_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
 
 # --- Modules & env ---
 [ -f /etc/profile.d/modules.sh ] && source /etc/profile.d/modules.sh
@@ -40,7 +42,7 @@ if [[ -n "${DENSITY_CENTERS}" || -n "${DENSITY_WIDTH}" || -n "${DENSITY_STRENGTH
 fi
 
 # --- Run job (your script computes p0 from s,e,n,i) ---
-cd /home/users/seb25178/Projects/BEC_SMF/BEC_self_organisation
+cd "${PROJECT_ROOT}"
 mkdir -p logs
 
 DENSITY_ARGS=()
@@ -80,7 +82,7 @@ if [[ -n "${DENSITY_STRENGTH}" ]]; then
   DENSITY_ARGS+=( "--density-strength" "${DENSITY_STRENGTH}" )
 fi
 
-python gen_smf_1d.py \
+python "${PROJECT_ROOT}/gen_smf_1d.py" \
   -f ivan_diss_params_high_t_res \
   -s "${P0_START}" \
   -e "${P0_END}" \
