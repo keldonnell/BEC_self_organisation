@@ -1,0 +1,39 @@
+# Python caches/bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Packaging/build artifacts
+build/
+dist/
+*.egg-info/
+
+# Test/tool caches
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# macOS / editor noise
+.DS_Store
+.vscode/
+
+# Cluster/runtime logs
+logs/
+
+# LaTeX aux files in documentation
+code_documentation/*.aux
+code_documentation/*.log
+code_documentation/*.toc
+code_documentation/*.out
+
+# Generated plots/tables
+*.png
+*.pdf
+
+# Generated simulation outputs
+patt1d_outputs/
